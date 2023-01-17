@@ -1,12 +1,18 @@
-class Point {
+export class Point {
     readonly y: number;
     readonly x: number;
     constructor(x: number, y: number) {
         this.x = x
         this.y = y
     }
+    add(pt:Point) {
+        return new Point(this.x+pt.x,this.y+pt.y)
+    }
+    scale(v:number) {
+        return new Point(this.x*v,this.y*v)
+    }
 }
-class Size {
+export class Size {
     readonly w: number;
     readonly h: number;
     constructor(w:number, h:number) {
@@ -14,7 +20,7 @@ class Size {
         this.h = h
     }
 }
-class Bounds {
+export class Bounds {
     x: number;
     y: any;
     w: any;
@@ -62,3 +68,8 @@ class Bounds {
         return new Point(this.x+this.w/2, this.y+this.h/2)
     }
 }
+
+export function rand(min: number, max: number) {
+    return min + Math.random()*(max-min)
+}
+
