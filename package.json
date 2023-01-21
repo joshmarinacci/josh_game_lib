@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsc && node dist/tests.js"
   },
   "dependencies": {
     "typescript": "^4.9.4"

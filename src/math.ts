@@ -67,6 +67,16 @@ export class Bounds {
     center() {
         return new Point(this.x+this.w/2, this.y+this.h/2)
     }
+
+    intersects(rect2: Bounds) {
+        if(this.left() > rect2.right()) return false
+        if(this.right() < rect2.left()) return false
+        if(this.top() > rect2.bottom()) return false
+        if(this.bottom() < rect2.top()) return false
+
+        // console.log("checking",rect2)
+        return true
+    }
 }
 
 export function rand(min: number, max: number) {
