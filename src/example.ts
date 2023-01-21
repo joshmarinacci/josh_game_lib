@@ -30,13 +30,14 @@ export class Example {
     constructor() {
         this.running = false
         this.ball = new Ball()
-        this.ball.bounds = new Bounds(50,50,50,50)
-        this.ball.velocity = new Point(4,-3)
+        this.ball.bounds = new Bounds(50,50,30,30)
+        this.ball.velocity = new Point(4,-6)
         this.blocks = [
-            new Bounds(0,0,300,20),
-            new Bounds(0,200,300,20),
-            new Bounds(300,0,20,200),
-            new Bounds(0,0,20,200),
+            new Bounds(0,0,599,20),
+            new Bounds(0,299-20,599,20),
+            new Bounds(599-20,20,20,260-1),
+            new Bounds(0,20,20,300-20-20-1),
+            new Bounds( 150, 100, 20, 20),
         ]
     }
 
@@ -46,17 +47,17 @@ export class Example {
     tick() {
         this.update()
         this.draw()
-        // requestAnimationFrame(() => this.tick())
+        if(this.running) requestAnimationFrame(() => this.tick())
     }
     start() {
-        // requestAnimationFrame(() => this.tick())
         this.running = true
-        this.handle = setInterval(() => {
-            this.tick()
-            if(!this.running) {
-                clearInterval(this.handle)
-            }
-        },10)
+        requestAnimationFrame(() => this.tick())
+        // this.handle = setInterval(() => {
+        //     this.tick()
+        //     if(!this.running) {
+        //         clearInterval(this.handle)
+        //     }
+        // },10)
     }
 
     private update() {
@@ -65,7 +66,7 @@ export class Example {
         this.blocks.forEach(blk => {
             let r = this.check_collision(this.ball.bounds, blk, this.ball.velocity)
             if(r.collided) {
-                console.log("collision",r)
+                // console.log("collision",r)
                 // this.running = false
                 if(r.direction === 'up') {
                     this.ball.velocity = new Point(this.ball.velocity.x,-this.ball.velocity.y)
@@ -115,47 +116,18 @@ export class Example {
         }
         let b2 = src.add(v)
         if(b2.intersects(target)) {
-            console.log(v)
             if(src.top() > target.bottom()) {
-                console.log("hit from going up")
-                return {
-                    collided:true,
-                    direction:"up",
-                }
+                return { collided:true, direction:"up", }
             }
             if(src.bottom() < target.top()) {
-                console.log("hit from goidn down")
-                return {
-                    collided:true,
-                    direction:"down",
-                }
+                return { collided:true, direction:"down", }
             }
-            if(v.x > 0 && v.x > v.y) {
-                console.log("going right")
-                return {
-                    collided:true,
-                    direction:"right",
-                }
+
+            if(src.left() > target.right()) {
+                return { collided:true, direction:"left", }
             }
-            if(v.x < 0 && v.x < v.y) {
-                console.log("going left")
-                return {
-                    collided:true,
-                    direction:"left",
-                }
-            }
-            if(v.y < 0) {
-                console.log("hit going up")
-                return {
-                    collided:true,
-                    direction:"up",
-                }
-            } else {
-                console.log("hit going down")
-                return {
-                    collided:true,
-                    direction:"down",
-                }
+            if(src.right() < target.left()) {
+                return { collided: true, direction:"right" }
             }
         }
         return {
