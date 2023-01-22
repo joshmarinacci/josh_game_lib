@@ -13,7 +13,8 @@
 
  */
 import {Bounds, Point} from "./math.js";
-import {GameRunner, RequestAnimGameRunner, SetIntervalTicker} from "./time.js";
+import {GameRunner, RequestAnimGameRunner} from "./time.js";
+import {check_collision_block} from "./physics.js";
 
 class Ball {
     bounds:Bounds
@@ -130,58 +131,11 @@ class Grid {
 //     }
 // }
 
-type CollisionResult = {
-    collided:boolean
-    direction?: "up"|"down"|"left"|"right"|undefined
-    dist?:number,
-    tvalue?:number,
-    reflection?:Point,
-
-}
-
-function check_collision_block(old_ball: Bounds, block: Bounds, v: Point):CollisionResult {
-    if(old_ball.intersects(block)) {
-        console.log("already inside!")
-        return {
-            collided:true
-        }
-    }
-    let new_ball = old_ball.add(v)
-    if(new_ball.intersects(block)) {
-        // console.log("intersects")
-        // console.log("velocity",v)
-        // console.log('ball old',old_ball)
-        // console.log("ball new",new_ball)
-        // console.log("block",block)
-        // console.log("new ball right",new_ball.right())
-
-        if(old_ball.right() < block.left()) {
-            let dist = block.left() - old_ball.right()
-            return { collided: true, direction:"right", dist:dist, tvalue:dist/v.x, reflection:new Point(-1,1) }
-        }
-        if(old_ball.left() > block.right()) {
-            let dist = block.right() - old_ball.left()
-            return { collided: true, direction:"left", dist:dist, tvalue:dist/v.x, reflection:new Point(-1,1) }
-        }
-        if(old_ball.top() > block.bottom()) {
-            let dist = block.bottom() - old_ball.top()
-            return { collided: true, direction:"up", dist, tvalue:dist/v.y, reflection:new Point(1,-1)}
-        }
-        if(old_ball.bottom() < block.top()) {
-            let dist = block.top() - old_ball.bottom()
-            return { collided: true, direction:"down", dist, tvalue:dist/v.y, reflection:new Point(1,-1)}
-        }
-    }
-    return {
-        collided:false
-    }
-}
-
 export class Example {
     private canvas: HTMLCanvasElement
     private ball: Ball
     private blocks: Bounds[]
-    // private grid: Grid
+    private grid: Grid
     private game_runner: GameRunner;
     constructor() {
         this.ball = new Ball()
@@ -194,8 +148,8 @@ export class Example {
             new Bounds(0,20,20,300-20-20-1),
             // new Bounds( 250, 40, 20, 100),
         ]
-        // this.grid = new Grid(4,4)
-        // this.grid.position = new Point(300,40)
+        this.grid = new Grid(4,4)
+        this.grid.position = new Point(300,40)
     }
 
     attach(element: Element) {
@@ -217,23 +171,10 @@ export class Example {
         this.blocks.forEach(blk => {
             let r = check_collision_block(this.ball.bounds, blk, this.ball.velocity)
             if(r.collided) {
-                // console.log("collision",r)
-                if(r.direction === 'right') {
-                    new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
-                    this.ball.velocity = this.ball.velocity.multiply(r.reflection)
-                }
-                if(r.direction === 'left') {
-                    new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
-                    this.ball.velocity = this.ball.velocity.multiply(r.reflection)
-                }
-                if(r.direction === 'up') {
-                    new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
-                    this.ball.velocity = this.ball.velocity.multiply(r.reflection)
-                }
-                if(r.direction === 'down') {
-                    new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
-                    this.ball.velocity = this.ball.velocity.multiply(r.reflection)
-                }
+                //new bounds based on the fraction of velocity before hit the barrier
+                new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
+                //reflect velocity
+                this.ball.velocity = this.ball.velocity.multiply(r.reflection)
                 // this.game_runner.stop()
             }
         })
