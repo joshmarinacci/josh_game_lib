@@ -19,7 +19,8 @@ const DEBUG = {
     GRID:false,
     METRICS: false
 }
-const SCREEN = new Size(500,500)
+const SCREEN = new Size(200,200)
+const SCALE = 3
 
 export class Example {
     private canvas: HTMLCanvasElement
@@ -29,19 +30,19 @@ export class Example {
     private game_runner: GameRunner;
     constructor() {
         this.ball = new Ball()
-        this.ball.bounds = new Bounds(100,300,10,10)
+        this.ball.bounds = new Bounds(50,150,10,10)
         this.ball.velocity = new Point(3,2)
-        const BORDER_WIDTH = 20
+        const BORDER_WIDTH = 10
         this.blocks = [
             new Bounds(0,0,SCREEN.w,BORDER_WIDTH),
             new Bounds(0,SCREEN.h-BORDER_WIDTH,SCREEN.w,BORDER_WIDTH),
-            new Bounds(SCREEN.w-BORDER_WIDTH,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-1),
-            new Bounds(0,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-BORDER_WIDTH-BORDER_WIDTH-2),
-            // new Bounds( 250, 40, 20, 100),
+
+            new Bounds(SCREEN.w-BORDER_WIDTH,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-BORDER_WIDTH*2),
+            new Bounds(0,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-BORDER_WIDTH-BORDER_WIDTH),
         ]
-        this.grid = new Grid(Math.floor((SCREEN.w-BORDER_WIDTH*6)/20),8, 20)
+        this.grid = new Grid(Math.floor((SCREEN.w-BORDER_WIDTH*6)/10),8, 10)
         this.grid.forEach((cell:Cell)=> cell.value = 1)
-        this.grid.position = new Point(60,60)
+        this.grid.position = new Point(30,30)
     }
 
     attach(element: Element) {
@@ -82,7 +83,8 @@ export class Example {
     private draw() {
         let ctx = this.canvas.getContext('2d')
         ctx.save()
-        ctx.translate(0.5,0.5)
+        // ctx.translate(0.5,0.5)
+        ctx.scale(SCALE,SCALE)
         ctx.imageSmoothingEnabled = false
 
         // clear bg

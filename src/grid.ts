@@ -39,11 +39,14 @@ export class Grid {
             for (let i = 0; i < this.w; i++) {
                 let cell = this.get_cell(i, j)
                 if(cell.value === 0) continue
-                ctx.strokeStyle = "blue"
                 let x = i * this.size
                 let y = j * this.size
-                let ww = this.size - 3
-                let hh = this.size - 3
+                let ww = this.size - 2
+                let hh = this.size - 2
+                ctx.fillStyle = '#4444ff'
+                ctx.fillRect(x,y,ww,hh)
+                ctx.strokeStyle = "#0000ff"
+                ctx.lineWidth = 1
                 ctx.strokeRect(x, y, ww, hh)
             }
         }
