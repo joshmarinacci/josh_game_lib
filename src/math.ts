@@ -11,6 +11,13 @@ export class Point {
     scale(v:number) {
         return new Point(this.x*v,this.y*v)
     }
+
+    subtract(pt: Point) {
+        return new Point(this.x-pt.x,this.y-pt.y)
+    }
+    toString() {
+        return `Point(${this.x},${this.y})`
+    }
 }
 export class Size {
     readonly w: number;
@@ -76,6 +83,9 @@ export class Bounds {
 
         // console.log("checking",rect2)
         return true
+    }
+    toString() {
+        return `(${this.x},${this.y})x(${this.w},${this.h})`
     }
 }
 
