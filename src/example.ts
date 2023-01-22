@@ -32,6 +32,7 @@ import {
 } from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
+import {KeyboardSystem} from "./keyboard.js";
 
 class Ball {
     bounds:Bounds
@@ -39,8 +40,20 @@ class Ball {
     fader:Fader
     constructor() {
         this.fader = new Fader({r:0.9,g:0,b:0},YELLOW,0.150)
-        this.bounds = new Bounds(50,150,10,10)
-        this.velocity = new Point(2.5,3.1)
+        this.bounds = new Bounds(50,150,5,5)
+        this.velocity = new Point(1.2,1.2)
+    }
+}
+
+class Paddle {
+    bounds:Bounds
+    constructor() {
+        this.bounds = new Bounds(50,160,50,10)
+    }
+
+    draw(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = 'blue'
+        ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
     }
 }
 const RED:RGB = {r:1,g:0,b:0}
@@ -78,15 +91,18 @@ const DEBUG = {
 const SCREEN = new Size(200,200)
 const SCALE = 3
 
+const BORDER_WIDTH = 10
 export class Example implements TickClient {
     private canvas: HTMLCanvasElement
     private ball: Ball
     private blocks: Bumper[]
     private grid: Grid
     private game_runner: GameRunner;
+    private paddle: Paddle;
+    private keyboard: KeyboardSystem;
     constructor() {
         this.ball = new Ball()
-        const BORDER_WIDTH = 10
+        this.paddle = new Paddle()
         const top_bumper = new Bumper(0,0,SCREEN.w,BORDER_WIDTH)
         const bot_bumper = new Bumper(0,SCREEN.h-BORDER_WIDTH,SCREEN.w,BORDER_WIDTH)
         const right_bumper = new Bumper(SCREEN.w-BORDER_WIDTH,BORDER_WIDTH,
@@ -104,6 +120,7 @@ export class Example implements TickClient {
 
     attach(element: Element) {
         this.canvas = element as unknown as HTMLCanvasElement
+        this.keyboard = new KeyboardSystem(this.canvas)
     }
     tick(time:TimeInfo) {
         this.update(time)
@@ -116,7 +133,26 @@ export class Example implements TickClient {
     }
 
     private update(time: TimeInfo) {
+        if(this.keyboard.isPressed('ArrowRight')) {
+            this.paddle.bounds.add_self(new Point(3,0))
+            if(this.paddle.bounds.right() > SCREEN.w - BORDER_WIDTH) {
+                this.paddle.bounds.set_right(SCREEN.w - BORDER_WIDTH)
+            }
+        }
+        if(this.keyboard.isPressed('ArrowLeft')) {
+            this.paddle.bounds.add_self(new Point(-3,0))
+            if(this.paddle.bounds.left() < BORDER_WIDTH) {
+                this.paddle.bounds.set_left(BORDER_WIDTH)
+            }
+        }
         let new_bounds = this.ball.bounds.add(this.ball.velocity)
+        let r3 = check_collision_block(this.ball.bounds,this.paddle.bounds,this.ball.velocity)
+        if(r3.collided) {
+            new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r3.tvalue))
+            //reflect velocity
+            this.ball.velocity = this.ball.velocity.multiply(r3.reflection)
+            this.ball.fader.start()
+        }
         this.blocks.forEach(bumper => {
             let blk = bumper.bounds
             let r = check_collision_block(this.ball.bounds, blk, this.ball.velocity)
@@ -182,6 +218,9 @@ export class Example implements TickClient {
 
         // grid
         this.grid.draw(ctx)
+
+        // paddle
+        this.paddle.draw(ctx)
 
         if(DEBUG.METRICS) {
             // debug

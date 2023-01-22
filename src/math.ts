@@ -119,6 +119,14 @@ export class Bounds {
     copy() {
         return new Bounds(this.x,this.y,this.w,this.h)
     }
+
+    set_left(left: number) {
+        this.x = left
+    }
+
+    set_right(right: number) {
+        this.x = right - this.w
+    }
 }
 
 export function rand(min: number, max: number) {
