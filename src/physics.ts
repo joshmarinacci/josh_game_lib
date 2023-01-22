@@ -6,8 +6,10 @@ export type CollisionResult = {
     dist?: number,
     tvalue?: number,
     reflection?: Point,
-
+    target?:any,
 }
+
+const Y_REFLECTION_VECTOR = new Point(1,-1)
 
 export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point): CollisionResult {
     if (old_ball.intersects(block)) {
@@ -32,7 +34,8 @@ export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point)
                 direction: "right",
                 dist: dist,
                 tvalue: dist / v.x,
-                reflection: new Point(-1, 1)
+                reflection: new Point(-1, 1),
+                target:block,
             }
         }
         if (old_ball.left() > block.right()) {
@@ -42,7 +45,8 @@ export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point)
                 direction: "left",
                 dist: dist,
                 tvalue: dist / v.x,
-                reflection: new Point(-1, 1)
+                reflection: new Point(-1, 1),
+                target:block,
             }
         }
         if (old_ball.top() > block.bottom()) {
@@ -52,7 +56,8 @@ export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point)
                 direction: "up",
                 dist,
                 tvalue: dist / v.y,
-                reflection: new Point(1, -1)
+                reflection: Y_REFLECTION_VECTOR,
+                target:block,
             }
         }
         if (old_ball.bottom() < block.top()) {
@@ -62,7 +67,8 @@ export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point)
                 direction: "down",
                 dist,
                 tvalue: dist / v.y,
-                reflection: new Point(1, -1)
+                reflection: Y_REFLECTION_VECTOR,
+                target:block,
             }
         }
     }
