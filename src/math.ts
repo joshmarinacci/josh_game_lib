@@ -18,6 +18,14 @@ export class Point {
     toString() {
         return `Point(${this.x},${this.y})`
     }
+
+    length() {
+        return Math.sqrt(this.x*this.x + this.y*this.y)
+    }
+
+    multiply(point: Point) {
+        return new Point(this.x*point.x,this.y*point.y)
+    }
 }
 export class Size {
     readonly w: number;
