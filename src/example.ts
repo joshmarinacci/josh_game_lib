@@ -13,8 +13,8 @@
 
  */
 import {Bounds, Point} from "./math.js";
-import {GameRunner, RequestAnimGameRunner} from "./time.js";
-import {check_collision_block} from "./physics.js";
+import {GameRunner, RequestAnimGameRunner, SetIntervalTicker} from "./time.js";
+import {check_collision_block, CollisionResult} from "./physics.js";
 
 class Ball {
     bounds:Bounds
@@ -30,7 +30,6 @@ class Grid {
     private h: number;
     private cells: Cell[];
     size: number;
-    private timeout:number
     position: Point;
 
     constructor(w: number, h: number) {
@@ -47,10 +46,9 @@ class Grid {
             }
         }
 
-        let cell = this.get_cell(0,2)
-        cell.value = 1
-        cell.color = 'blue'
-        this.timeout = 0
+        this.get_cell(0,2).value = 1
+        this.get_cell(3,1).value = 1
+        this.get_cell(3,3).value = 1
     }
 
     draw(ctx: CanvasRenderingContext2D) {
@@ -59,7 +57,7 @@ class Grid {
         for(let j=0; j<this.h; j++) {
             for (let i = 0; i < this.w; i++) {
                 let cell = this.get_cell(i,j)
-                ctx.strokeStyle = cell.color
+                ctx.strokeStyle = cell.value === 0?"orange":"blue"
                 let x = i*this.size
                 let y = j*this.size
                 let ww = this.size-2
@@ -72,6 +70,10 @@ class Grid {
 
 
     get_cell(x: number, y: number):Cell {
+        if(x < 0) return undefined
+        if(y < 0) return undefined
+        if(x >= this.w) return undefined
+        if(y >= this.h) return undefined
         let n = y*this.w+x
         return this.cells[n]
     }
@@ -85,51 +87,41 @@ class Grid {
     }
 }
 
-// function check_collision_grid(grid:Grid, ball: Bounds, v: Point):CollisionResult {
-//     let bounds = grid.self_bounds()
-//     let ball_new = ball.add(v)
-//     if(!bounds.intersects(ball_new) && !bounds.intersects(ball)) {
-//         // console.log("outside")
-//         return {
-//             collided:false
-//         }
-//     }
+function check_collision_grid(grid:Grid, old_ball: Bounds, v: Point):CollisionResult {
+    let bounds = grid.self_bounds()
+    let new_ball = old_ball.add(v)
+    if(!bounds.intersects(new_ball) && !bounds.intersects(old_ball)) {
+        return {
+            collided:false
+        }
+    }
 //
-//     let c1 = new Point(ball_new.x+ball_new.w,ball_new.y).subtract(grid.position)
-//     let c1a = new Point(Math.floor(c1.x/grid.size), Math.floor(c1.y/grid.size))
-//     let cell = grid.get_cell(c1a.x,c1a.y)
-//     if(cell.value == 0) {
-//         return {
-//             collided:false,
-//         }
-//     }
-//     if(cell.value == 1) {
-//         // if(this.timeout > 20) {
-//         //     throw new Error("")
-//         // }
-//         // this.timeout += 1
-//         // console.log('cell is full')
-//         let cell_bounds = grid.get_cell_bounds(c1a.x,c1a.y)
-//         console.log("cell",cell_bounds, cell_bounds.left())
-//         console.log("ball",ball_new, ball_new.right())
-//         if(ball_new.top() < cell_bounds.bottom()) {
-//             // console.log("going up")
-//             return {collided: true, direction: "up"}
-//         }
-//         if(ball_new.right() >= cell_bounds.left()) {
-//             // console.log("to the right")
-//             return {collided: true, direction: "right"}
-//         }
-//         return {
-//             collided:false,
-//             direction:"right"
-//         }
-//     }
-//     return {
-//         collided:false,
-//         direction:"up",
-//     }
-// }
+    function check_collision_grid_corner(grid:Grid, corner:Point) {
+        let cell_coords = corner.subtract(grid.position).scale(1/grid.size).floor()
+        let cell = grid.get_cell(cell_coords.x,cell_coords.y)
+        if(cell) {
+            if(cell.value == 0)  return { collided:false  }
+            if(cell.value == 1) {
+                let cell_bounds = grid.get_cell_bounds(cell_coords.x, cell_coords.y)
+                return check_collision_block(old_ball, cell_bounds, v)
+            }
+        }
+        return { collided: false }
+    }
+
+    let r1 = check_collision_grid_corner(grid, new_ball.top_right())
+    if(r1.collided) return r1
+    let r2 = check_collision_grid_corner(grid, new_ball.bottom_right())
+    if(r2.collided) return r2
+    let r3 = check_collision_grid_corner(grid, new_ball.bottom_left())
+    if(r3.collided) return r3
+    let r4 = check_collision_grid_corner(grid, new_ball.top_left())
+    if(r4.collided) return r4
+
+    return {
+        collided:false,
+    }
+}
 
 export class Example {
     private canvas: HTMLCanvasElement
@@ -139,8 +131,8 @@ export class Example {
     private game_runner: GameRunner;
     constructor() {
         this.ball = new Ball()
-        this.ball.bounds = new Bounds(100,150,30,30)
-        this.ball.velocity = new Point(-7,5)
+        this.ball.bounds = new Bounds(100,150,20,20)
+        this.ball.velocity = new Point(13,10)
         this.blocks = [
             new Bounds(0,0,599,20),
             new Bounds(0,299-20,599,20),
@@ -167,7 +159,6 @@ export class Example {
 
     private update() {
         let new_bounds = this.ball.bounds.add(this.ball.velocity)
-        // let hit = false
         this.blocks.forEach(blk => {
             let r = check_collision_block(this.ball.bounds, blk, this.ball.velocity)
             if(r.collided) {
@@ -175,22 +166,13 @@ export class Example {
                 new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
                 //reflect velocity
                 this.ball.velocity = this.ball.velocity.multiply(r.reflection)
-                // this.game_runner.stop()
             }
         })
-        // let r = check_collision_grid(this.grid,this.ball.bounds, this.ball.velocity)
-        // if(r.collided) {
-        //     console.log("collided with the grid")
-        //     if(r.direction === 'right') {
-        //         this.ball.velocity = new Point(-this.ball.velocity.x,this.ball.velocity.y)
-        //         console.log("hit on right, flipping to the left")
-        //         // console.log("new vel",this.ball.velocity)
-        //         // console.log("ball bounds",this.ball.bounds)
-        //         // this.running = false
-        //     }
-        //     hit = true
-        // }
-        // if(!hit) {
+        let r = check_collision_grid(this.grid,this.ball.bounds, this.ball.velocity)
+        if(r.collided) {
+            new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
+            this.ball.velocity = this.ball.velocity.multiply(r.reflection)
+        }
         this.ball.bounds = new_bounds
     }
 
@@ -199,8 +181,27 @@ export class Example {
         ctx.save()
         ctx.translate(0.5,0.5)
         ctx.imageSmoothingEnabled = false
+
+        // clear bg
         ctx.fillStyle = 'black'
         ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
+
+        // draw pixel grid
+
+        for(let i=0; i<=this.canvas.width; i+=100) {
+            ctx.beginPath()
+            ctx.moveTo(i,0)
+            ctx.lineTo(i,this.canvas.height-1)
+            ctx.strokeStyle = '#222222'
+            ctx.stroke()
+        }
+        for(let j=0; j<=this.canvas.height; j+=100) {
+            ctx.beginPath()
+            ctx.moveTo(0,j)
+            ctx.lineTo(this.canvas.width-1,j)
+            ctx.strokeStyle = '#222222'
+            ctx.stroke()
+        }
 
         // blocks
         this.blocks.forEach(blk => {
@@ -211,7 +212,7 @@ export class Example {
         this.stroke_bounds(ctx,this.ball.bounds,'red')
 
         // grid
-        // this.grid.draw(ctx)
+        this.grid.draw(ctx)
 
         // debug
         ctx.save()

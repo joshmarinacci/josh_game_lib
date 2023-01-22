@@ -1,6 +1,6 @@
 import {Bounds, Point} from "./math.js";
 
-type CollisionResult = {
+export type CollisionResult = {
     collided: boolean
     direction?: "up" | "down" | "left" | "right" | undefined
     dist?: number,

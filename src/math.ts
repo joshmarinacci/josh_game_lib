@@ -26,6 +26,10 @@ export class Point {
     multiply(point: Point) {
         return new Point(this.x*point.x,this.y*point.y)
     }
+
+    floor() {
+        return new Point(Math.floor(this.x),Math.floor(this.y))
+    }
 }
 export class Size {
     readonly w: number;
@@ -94,6 +98,22 @@ export class Bounds {
     }
     toString() {
         return `(${this.x},${this.y})x(${this.w},${this.h})`
+    }
+
+    top_right():Point {
+        return new Point(this.x+this.w,this.y)
+    }
+
+    bottom_right() {
+        return new Point(this.x+this.w,this.y+this.h)
+    }
+
+    bottom_left() {
+        return new Point(this.x,this.y+this.h)
+    }
+
+    top_left() {
+        return new Point(this.x,this.y)
     }
 }
 
