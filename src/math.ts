@@ -115,6 +115,10 @@ export class Bounds {
     top_left() {
         return new Point(this.x,this.y)
     }
+
+    copy() {
+        return new Bounds(this.x,this.y,this.w,this.h)
+    }
 }
 
 export function rand(min: number, max: number) {

@@ -1,18 +1,74 @@
 /*
 
+game entity
+save of the entity. can hurt the player? is a block? has special behaviors
+velocity
+add a block view to draw as a rectangle with a border
+when a bumper is hit, check if bumper, apply a fade effect
+fade effect brightens then darkens color over a certain time period.
+maintains own state. can be removed once done.
+how do we pass around events? some sort of event handlers? listeners?
+sound effect triggered when bumper is hit. what is the connection for this?
+jiggle effect: draws a block adjusted left or right over time. doesn't effect bounds collision.
+
+if ball hits paddle and left or right is currently pressed, then adjust the bounce with a tiny bit of spin.
+also blink the ball when hit and trigger sound effect.
+
+start with a Paddle and Ball and Bumper classes, then try to collect common functions
 
 * add angle adjustment if hits a moving object
 * draw grid object and 'moving' object with different colors.
 * be able to change grid cell after a collision. needs a way to get the grid coords back.
  */
 import {Bounds, Point, Size} from "./math.js";
-import {GameRunner, RequestAnimGameRunner} from "./time.js";
+import {
+    Fader,
+    GameRunner,
+    RequestAnimGameRunner,
+    RGB, rgb_to_string,
+    TickClient,
+    TimeInfo,
+    Wiggle
+} from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
 
 class Ball {
     bounds:Bounds
     velocity:Point
+    fader:Fader
+    constructor() {
+        this.fader = new Fader({r:0.9,g:0,b:0},YELLOW,0.150)
+        this.bounds = new Bounds(50,150,10,10)
+        this.velocity = new Point(2.5,3.1)
+    }
+}
+const RED:RGB = {r:1,g:0,b:0}
+const BLACK:RGB = {r:0,g:0,b:0}
+const WHITE:RGB = {r:1,g:1,b:1}
+const VIOLET:RGB = {r:0.3,g:0,b:0.8}
+const YELLOW:RGB = {r:1.0, g:0.8, b:0.1}
+
+class Bumper {
+    bounds:Bounds
+    private bounce: number;
+    fade: Fader;
+    wiggle: Wiggle;
+    constructor(x,y,w,h) {
+        this.bounds = new Bounds(x,y,w,h)
+        this.bounce = 0
+        this.fade = new Fader(WHITE, VIOLET,0.25)
+        this.wiggle = new Wiggle(new Point(0,2),0.25,3)
+    }
+
+    draw(ctx, time: TimeInfo) {
+        this.bounce += 1
+        let vis = this.wiggle.makeBounds(time,this.bounds)
+        // let vis = this.bounds
+        ctx.fillStyle = this.fade.makeColor(time)
+        // ctx.fillStyle = 'magenta'
+        ctx.fillRect(vis.x,vis.y,vis.w,vis.h)
+    }
 }
 
 const DEBUG = {
@@ -22,24 +78,25 @@ const DEBUG = {
 const SCREEN = new Size(200,200)
 const SCALE = 3
 
-export class Example {
+export class Example implements TickClient {
     private canvas: HTMLCanvasElement
     private ball: Ball
-    private blocks: Bounds[]
+    private blocks: Bumper[]
     private grid: Grid
     private game_runner: GameRunner;
     constructor() {
         this.ball = new Ball()
-        this.ball.bounds = new Bounds(50,150,10,10)
-        this.ball.velocity = new Point(0.1,0.1)
         const BORDER_WIDTH = 10
-        this.blocks = [
-            new Bounds(0,0,SCREEN.w,BORDER_WIDTH),
-            new Bounds(0,SCREEN.h-BORDER_WIDTH,SCREEN.w,BORDER_WIDTH),
+        const top_bumper = new Bumper(0,0,SCREEN.w,BORDER_WIDTH)
+        const bot_bumper = new Bumper(0,SCREEN.h-BORDER_WIDTH,SCREEN.w,BORDER_WIDTH)
+        const right_bumper = new Bumper(SCREEN.w-BORDER_WIDTH,BORDER_WIDTH,
+            BORDER_WIDTH,SCREEN.h-BORDER_WIDTH*2)
+        right_bumper.wiggle.offset = new Point(2,0)
+        const left_bumper = new Bumper(0,BORDER_WIDTH,
+            BORDER_WIDTH,SCREEN.h-BORDER_WIDTH-BORDER_WIDTH)
+        left_bumper.wiggle.offset = new Point(2,0)
 
-            new Bounds(SCREEN.w-BORDER_WIDTH,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-BORDER_WIDTH*2),
-            new Bounds(0,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-BORDER_WIDTH-BORDER_WIDTH),
-        ]
+        this.blocks = [top_bumper,bot_bumper,right_bumper,left_bumper]
         this.grid = new Grid(Math.floor((SCREEN.w-BORDER_WIDTH*6)/10),8, 10)
         this.grid.forEach((cell:Cell)=> cell.value = 1)
         this.grid.position = new Point(30,30)
@@ -48,9 +105,9 @@ export class Example {
     attach(element: Element) {
         this.canvas = element as unknown as HTMLCanvasElement
     }
-    tick() {
-        this.update()
-        this.draw()
+    tick(time:TimeInfo) {
+        this.update(time)
+        this.draw(time)
     }
     start() {
         this.game_runner = new RequestAnimGameRunner()
@@ -58,15 +115,19 @@ export class Example {
         this.game_runner.start(this)
     }
 
-    private update() {
+    private update(time: TimeInfo) {
         let new_bounds = this.ball.bounds.add(this.ball.velocity)
-        this.blocks.forEach(blk => {
+        this.blocks.forEach(bumper => {
+            let blk = bumper.bounds
             let r = check_collision_block(this.ball.bounds, blk, this.ball.velocity)
             if(r.collided) {
                 //new bounds based on the fraction of velocity before hit the barrier
                 new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
                 //reflect velocity
                 this.ball.velocity = this.ball.velocity.multiply(r.reflection)
+                this.ball.fader.start()
+                bumper.fade.start()
+                bumper.wiggle.start()
             }
         })
         let r = check_collision_grid(this.grid,this.ball.bounds, this.ball.velocity)
@@ -80,7 +141,7 @@ export class Example {
         this.ball.bounds = new_bounds
     }
 
-    private draw() {
+    private draw(time: TimeInfo) {
         let ctx = this.canvas.getContext('2d')
         ctx.save()
         ctx.translate(1.5,1.5)
@@ -110,13 +171,14 @@ export class Example {
         }
 
         // blocks
-        this.blocks.forEach(blk => {
-            this.stroke_bounds(ctx,blk,'aqua')
-        })
+        this.blocks.forEach(bumper => bumper.draw(ctx,time))
 
         // ball
-        this.fill_bounds(ctx,this.ball.bounds,'#c50202')
-        this.stroke_bounds(ctx,this.ball.bounds,'#f37272')
+        ctx.fillStyle = this.ball.fader.makeColor(time)
+        ctx.fillRect(this.ball.bounds.x,this.ball.bounds.y,this.ball.bounds.w,this.ball.bounds.h)
+        // this.fill_bounds(ctx,this.ball.bounds,'#c50202')
+        ctx.strokeStyle = rgb_to_string(YELLOW)
+        ctx.strokeRect(this.ball.bounds.x,this.ball.bounds.y,this.ball.bounds.w,this.ball.bounds.h)
 
         // grid
         this.grid.draw(ctx)
