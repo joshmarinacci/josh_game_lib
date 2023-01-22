@@ -31,7 +31,7 @@ export class Example {
     constructor() {
         this.ball = new Ball()
         this.ball.bounds = new Bounds(50,150,10,10)
-        this.ball.velocity = new Point(3,2)
+        this.ball.velocity = new Point(0.1,0.1)
         const BORDER_WIDTH = 10
         this.blocks = [
             new Bounds(0,0,SCREEN.w,BORDER_WIDTH),
@@ -83,7 +83,7 @@ export class Example {
     private draw() {
         let ctx = this.canvas.getContext('2d')
         ctx.save()
-        // ctx.translate(0.5,0.5)
+        ctx.translate(1.5,1.5)
         ctx.scale(SCALE,SCALE)
         ctx.imageSmoothingEnabled = false
 
@@ -115,7 +115,8 @@ export class Example {
         })
 
         // ball
-        this.stroke_bounds(ctx,this.ball.bounds,'red')
+        this.fill_bounds(ctx,this.ball.bounds,'#c50202')
+        this.stroke_bounds(ctx,this.ball.bounds,'#f37272')
 
         // grid
         this.grid.draw(ctx)
@@ -133,9 +134,14 @@ export class Example {
         ctx.restore()
     }
 
-    private stroke_bounds(ctx: CanvasRenderingContext2D, ball: Bounds, color:string) {
+    private stroke_bounds(ctx: CanvasRenderingContext2D, bounds: Bounds, color:string) {
         ctx.strokeStyle = color
-        ctx.strokeRect(ball.x, ball.y, ball.w-1, ball.h-1)
+        ctx.lineWidth = 1
+        ctx.strokeRect(bounds.x, bounds.y, bounds.w-1, bounds.h-1)
+    }
+    private fill_bounds(ctx: CanvasRenderingContext2D, bounds: Bounds, color:string) {
+        ctx.fillStyle = color
+        ctx.fillRect(bounds.x, bounds.y, bounds.w-1, bounds.h-1)
     }
 
 }
