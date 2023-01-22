@@ -13,10 +13,10 @@ export class Grid {
     size: number;
     position: Point;
 
-    constructor(w: number, h: number) {
+    constructor(w: number, h: number, size:number) {
         this.w = w
         this.h = h
-        this.size = 40
+        this.size = size
         this.cells = []
         for (let j = 0; j < this.h; j++) {
             for (let i = 0; i < this.w; i++) {
@@ -38,11 +38,12 @@ export class Grid {
         for (let j = 0; j < this.h; j++) {
             for (let i = 0; i < this.w; i++) {
                 let cell = this.get_cell(i, j)
-                ctx.strokeStyle = cell.value === 0 ? "orange" : "blue"
+                if(cell.value === 0) continue
+                ctx.strokeStyle = "blue"
                 let x = i * this.size
                 let y = j * this.size
-                let ww = this.size - 2
-                let hh = this.size - 2
+                let ww = this.size - 3
+                let hh = this.size - 3
                 ctx.strokeRect(x, y, ww, hh)
             }
         }
@@ -66,7 +67,18 @@ export class Grid {
     public self_bounds() {
         return new Bounds(this.position.x, this.position.y, this.w * 40, this.h * 40)
     }
+
+    forEach(cb: CellCallback) {
+        for (let j = 0; j < this.h; j++) {
+            for (let i = 0; i < this.w; i++) {
+                let cell = this.get_cell(i,j)
+                cb(cell, new Point(i,j))
+            }
+        }
+    }
 }
+
+type CellCallback = (cell:Cell, coords:Point) => void
 
 export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): CollisionResult {
     let bounds = grid.self_bounds()

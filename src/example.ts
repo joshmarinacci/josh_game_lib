@@ -5,7 +5,7 @@
 * draw grid object and 'moving' object with different colors.
 * be able to change grid cell after a collision. needs a way to get the grid coords back.
  */
-import {Bounds, Point} from "./math.js";
+import {Bounds, Point, Size} from "./math.js";
 import {GameRunner, RequestAnimGameRunner} from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
@@ -15,6 +15,12 @@ class Ball {
     velocity:Point
 }
 
+const DEBUG = {
+    GRID:false,
+    METRICS: false
+}
+const SCREEN = new Size(500,500)
+
 export class Example {
     private canvas: HTMLCanvasElement
     private ball: Ball
@@ -23,17 +29,19 @@ export class Example {
     private game_runner: GameRunner;
     constructor() {
         this.ball = new Ball()
-        this.ball.bounds = new Bounds(100,150,20,20)
-        this.ball.velocity = new Point(13,10)
+        this.ball.bounds = new Bounds(100,300,10,10)
+        this.ball.velocity = new Point(3,2)
+        const BORDER_WIDTH = 20
         this.blocks = [
-            new Bounds(0,0,599,20),
-            new Bounds(0,299-20,599,20),
-            new Bounds(599-20,20,20,260-1),
-            new Bounds(0,20,20,300-20-20-1),
+            new Bounds(0,0,SCREEN.w,BORDER_WIDTH),
+            new Bounds(0,SCREEN.h-BORDER_WIDTH,SCREEN.w,BORDER_WIDTH),
+            new Bounds(SCREEN.w-BORDER_WIDTH,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-1),
+            new Bounds(0,BORDER_WIDTH,BORDER_WIDTH,SCREEN.h-BORDER_WIDTH-BORDER_WIDTH-2),
             // new Bounds( 250, 40, 20, 100),
         ]
-        this.grid = new Grid(4,4)
-        this.grid.position = new Point(300,40)
+        this.grid = new Grid(Math.floor((SCREEN.w-BORDER_WIDTH*6)/20),8, 20)
+        this.grid.forEach((cell:Cell)=> cell.value = 1)
+        this.grid.position = new Point(60,60)
     }
 
     attach(element: Element) {
@@ -82,20 +90,21 @@ export class Example {
         ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
 
         // draw pixel grid
-
-        for(let i=0; i<=this.canvas.width; i+=100) {
-            ctx.beginPath()
-            ctx.moveTo(i,0)
-            ctx.lineTo(i,this.canvas.height-1)
-            ctx.strokeStyle = '#222222'
-            ctx.stroke()
-        }
-        for(let j=0; j<=this.canvas.height; j+=100) {
-            ctx.beginPath()
-            ctx.moveTo(0,j)
-            ctx.lineTo(this.canvas.width-1,j)
-            ctx.strokeStyle = '#222222'
-            ctx.stroke()
+        if(DEBUG.GRID) {
+            for (let i = 0; i <= this.canvas.width; i += 100) {
+                ctx.beginPath()
+                ctx.moveTo(i, 0)
+                ctx.lineTo(i, this.canvas.height - 1)
+                ctx.strokeStyle = '#222222'
+                ctx.stroke()
+            }
+            for (let j = 0; j <= this.canvas.height; j += 100) {
+                ctx.beginPath()
+                ctx.moveTo(0, j)
+                ctx.lineTo(this.canvas.width - 1, j)
+                ctx.strokeStyle = '#222222'
+                ctx.stroke()
+            }
         }
 
         // blocks
@@ -109,14 +118,16 @@ export class Example {
         // grid
         this.grid.draw(ctx)
 
-        // debug
-        ctx.save()
-        ctx.translate(30,this.canvas.height-100)
-        ctx.fillStyle = 'white'
-        ctx.font = '14px sans-serif'
-        ctx.fillText(`v = ${this.ball.velocity.toString()}`, 0,0)
-        ctx.fillText(`ball = ${this.ball.bounds.toString()}`, 0,0+20)
-        ctx.restore()
+        if(DEBUG.METRICS) {
+            // debug
+            ctx.save()
+            ctx.translate(30, this.canvas.height - 100)
+            ctx.fillStyle = 'white'
+            ctx.font = '14px sans-serif'
+            ctx.fillText(`v = ${this.ball.velocity.toString()}`, 0, 0)
+            ctx.fillText(`ball = ${this.ball.bounds.toString()}`, 0, 0 + 20)
+            ctx.restore()
+        }
         ctx.restore()
     }
 
