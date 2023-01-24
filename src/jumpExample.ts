@@ -20,16 +20,18 @@ block in the middle you can jump on but not pass through
  */
 const SCALE = 3
 const SCREEN = new Size(200,200)
+const PARAMS = {
+    GRAVITY: new Point(0,0.10),
+    JUMP_VELOCITY: new Point(0, -4 ),
+    FRICTION_SCALE: 0.8,
+    MAX_RUN_SPEED: 1.5,
+    MAX_FALL_SPEED: 2
+}
 const DEBUG = {
     GRID: true,
     METRICS: true,
     GRAVITY:true,
 }
-const RED:RGB = {r:1,g:0,b:0}
-const BLACK:RGB = {r:0,g:0,b:0}
-const WHITE:RGB = {r:1,g:1,b:1}
-const VIOLET:RGB = {r:0.3,g:0,b:0.8}
-const YELLOW:RGB = {r:1.0, g:0.8, b:0.1}
 
 function fillBounds(ctx: CanvasRenderingContext2D, bounds: Bounds, red: string) {
     ctx.fillStyle = red
@@ -52,11 +54,11 @@ class Player {
     friction: number;
     constructor() {
         this.bounds = new Bounds(100,100,16,32)
-        this.gravity = DEBUG.GRAVITY?new Point(0,0.04):new Point(0,0)
+        this.gravity = DEBUG.GRAVITY?PARAMS.GRAVITY:new Point(0,0)
         this.velocity = new Point(0,0)
         this.moveAccel = new Point(0,0)
         this.standing = false
-        this.friction = 0.9
+        this.friction = PARAMS.FRICTION_SCALE
     }
 
     draw(time: TimeInfo, ctx: CanvasRenderingContext2D) {
@@ -118,7 +120,7 @@ export class JumpExample implements TickClient {
         }
         if(this.keyboard.isPressed('Space')) {
             if(this.player.standing) {
-                this.player.velocity = this.player.velocity.add(new Point(0,-3))
+                this.player.velocity = this.player.velocity.add(PARAMS.JUMP_VELOCITY)
                 this.player.standing = false
             }
         }
@@ -137,12 +139,9 @@ export class JumpExample implements TickClient {
             this.player.velocity = this.player.velocity.add(this.player.moveAccel)
         }
         // restrict max horizontal speed
-        if (this.player.velocity.x > 1) {
-            this.player.velocity = new Point(1, this.player.velocity.y)
-        }
-        if (this.player.velocity.x < -1) {
-            this.player.velocity = new Point(-1, this.player.velocity.y)
-        }
+        this.player.velocity = this.player.velocity.clamp(
+            new Point(-PARAMS.MAX_RUN_SPEED,-10),
+            new Point(PARAMS.MAX_RUN_SPEED,PARAMS.MAX_FALL_SPEED))
 
         // if in the air
         let new_bounds = this.player.bounds.add(this.player.velocity)

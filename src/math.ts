@@ -23,12 +23,22 @@ export class Point {
         return Math.sqrt(this.x*this.x + this.y*this.y)
     }
 
-    multiply(point: Point) {
+    multiply(point: Point):Point {
         return new Point(this.x*point.x,this.y*point.y)
     }
 
-    floor() {
+    floor():Point {
         return new Point(Math.floor(this.x),Math.floor(this.y))
+    }
+
+    clamp(min: Point, max: Point):Point {
+        let x = this.x
+        if(x < min.x) x = min.x
+        if(x > max.x) x = max.x
+        let y = this.y
+        if(y < min.y) y = min.y
+        if(y > max.y) y = max.y
+        return new Point(x,y)
     }
 }
 export class Size {
