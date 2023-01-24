@@ -64,6 +64,12 @@ class Player {
     draw(time: TimeInfo, ctx: CanvasRenderingContext2D) {
         fillStrokeBounds(ctx,this.bounds,'orangered','darkred')
     }
+
+    reset() {
+        this.bounds = new Bounds(100,100,16,32)
+        this.moveAccel = new Point(0,0)
+        this.velocity = new Point(0,0)
+    }
 }
 class Block {
     bounds: Bounds;
@@ -76,19 +82,47 @@ class Block {
     }
 }
 
+class Powerup {
+    bounds: Bounds;
+    constructor(bounds: Bounds) {
+        this.bounds = bounds
+    }
+    draw(time: TimeInfo, ctx: CanvasRenderingContext2D) {
+        fillStrokeBounds(ctx,this.bounds,'aqua','blue')
+    }
+}
+
+class Enemy {
+    bounds: Bounds;
+    constructor(bounds: Bounds) {
+        this.bounds = bounds
+    }
+    draw(time: TimeInfo, ctx: CanvasRenderingContext2D) {
+        fillStrokeBounds(ctx,this.bounds,'orange','darkOrange')
+    }
+}
+
 export class JumpExample implements TickClient {
     private canvas: HTMLCanvasElement
     private game_runner: GameRunner;
     private keyboard: KeyboardSystem;
     private player: Player;
     private blocks: Block[];
+    private powerups: Powerup[];
+    private enemies: Enemy[];
     constructor() {
         this.player = new Player()
         this.blocks = [
-            new Block(new Bounds(0,0,20,SCREEN.h-20)),
-            new Block(new Bounds(SCREEN.w-20,0,20,SCREEN.h-20)),
-            new Block(new Bounds(0,SCREEN.h-20, SCREEN.w,20)),
-            new Block(new Bounds(120,120,30,20))
+            new Block(new Bounds(0,0,16,SCREEN.h-16)),
+            new Block(new Bounds(SCREEN.w-16,0,16,SCREEN.h-16)),
+            new Block(new Bounds(0,SCREEN.h-16, SCREEN.w,16)),
+            new Block(new Bounds(120,120,16*3,16))
+        ]
+        this.powerups = [
+            new Powerup(new Bounds(135,120-16,16,16))
+        ]
+        this.enemies = [
+            new Enemy(new Bounds(30,SCREEN.h - 16 - 16,16,16))
         ]
     }
 
@@ -146,6 +180,20 @@ export class JumpExample implements TickClient {
         // if in the air
         let new_bounds = this.player.bounds.add(this.player.velocity)
         let hit_something = false
+        this.powerups.forEach(powerup => {
+            let hit = check_collision_block(this.player.bounds, powerup.bounds, this.player.velocity)
+            if (hit.collided) {
+                this.powerups = this.powerups.filter(p => p !== powerup)
+            }
+        })
+        for(let enemy of this.enemies) {
+            let hit = check_collision_block(this.player.bounds, enemy.bounds, this.player.velocity)
+            if (hit.collided) {
+                // move player back to starting point
+                this.player.reset()
+                return
+            }
+        }
         this.blocks.forEach(blk => {
             let hit= check_collision_block(this.player.bounds,blk.bounds,this.player.velocity)
             if(hit.collided) {
@@ -210,6 +258,8 @@ export class JumpExample implements TickClient {
         }
 
         this.player.draw(time,ctx)
+        this.powerups.forEach(power => power.draw(time,ctx))
+        this.enemies.forEach(enem => enem.draw(time,ctx))
         this.blocks.forEach(blk => blk.draw(time,ctx))
 
         if(DEBUG.METRICS) {
