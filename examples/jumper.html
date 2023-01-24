@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style type="text/css">
+    body {
+      background-color: black;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      /*border: 1px solid red;*/
+      /*min-height: 500px;*/
+    }
+    canvas {
+      border: 1px solid gray;
+      width: 1200px;
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas" width="600" height="600" tabindex="0"></canvas>
+<script src="../dist/index.js"></script>
+<script type="module">
+  import {JumpExample} from '../dist/jumpExample.js'
+  let example = new JumpExample()
+  example.attach(document.querySelector('#canvas'))
+  example.start(this)
+</script>
+</body>
+</html>

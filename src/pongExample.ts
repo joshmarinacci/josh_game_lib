@@ -92,7 +92,7 @@ const SCREEN = new Size(200,200)
 const SCALE = 3
 
 const BORDER_WIDTH = 10
-export class Example implements TickClient {
+export class PongExample implements TickClient {
     private canvas: HTMLCanvasElement
     private ball: Ball
     private blocks: Bumper[]

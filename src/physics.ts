@@ -11,24 +11,26 @@ export type CollisionResult = {
 
 const Y_REFLECTION_VECTOR = new Point(1,-1)
 
-export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point): CollisionResult {
-    if (old_ball.intersects(block)) {
-        // console.log("already inside!")
+export function check_collision_block(old_bounds: Bounds, block: Bounds, v: Point): CollisionResult {
+    if (old_bounds.intersects(block)) {
+        console.log("intersects with old bounds")
+        console.log("already inside!", old_bounds, block)
+        console.log("old left",old_bounds.left(), 'block right',block.right())
         return {
             collided: false
         }
     }
-    let new_ball = old_ball.add(v)
-    if (new_ball.intersects(block)) {
-        // console.log("intersects")
+    let new_bounds = old_bounds.add(v)
+    if (new_bounds.intersects(block)) {
+        // console.log("intersects with new bounds")
         // console.log("velocity",v)
         // console.log('ball old',old_ball)
         // console.log("ball new",new_ball)
         // console.log("block",block)
         // console.log("new ball right",new_ball.right())
 
-        if (old_ball.right() < block.left()) {
-            let dist = block.left() - old_ball.right()
+        if (old_bounds.right() <= block.left()) {
+            let dist = block.left() - old_bounds.right()
             return {
                 collided: true,
                 direction: "right",
@@ -38,8 +40,8 @@ export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point)
                 target:block,
             }
         }
-        if (old_ball.left() > block.right()) {
-            let dist = block.right() - old_ball.left()
+        if (old_bounds.left() >= block.right()) {
+            let dist = block.right() - old_bounds.left()
             return {
                 collided: true,
                 direction: "left",
@@ -49,8 +51,8 @@ export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point)
                 target:block,
             }
         }
-        if (old_ball.top() > block.bottom()) {
-            let dist = block.bottom() - old_ball.top()
+        if (old_bounds.top() >= block.bottom()) {
+            let dist = block.bottom() - old_bounds.top()
             return {
                 collided: true,
                 direction: "up",
@@ -60,8 +62,8 @@ export function check_collision_block(old_ball: Bounds, block: Bounds, v: Point)
                 target:block,
             }
         }
-        if (old_ball.bottom() < block.top()) {
-            let dist = block.top() - old_ball.bottom()
+        if (old_bounds.bottom() <= block.top()) {
+            let dist = block.top() - old_bounds.bottom()
             return {
                 collided: true,
                 direction: "down",

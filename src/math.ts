@@ -39,6 +39,19 @@ export class Size {
         this.h = h
     }
 }
+
+export class Insets {
+    top:number
+    right:number
+    bottom:number
+    left:number
+    constructor(top,right,bottom,left) {
+        this.top = top
+        this.right = right
+        this.bottom = bottom
+        this.left = left
+    }
+}
 export class Bounds {
     x: number;
     y: any;
@@ -87,17 +100,15 @@ export class Bounds {
         return new Point(this.x+this.w/2, this.y+this.h/2)
     }
 
-    intersects(rect2: Bounds) {
-        if(this.left() > rect2.right()) return false
-        if(this.right() < rect2.left()) return false
-        if(this.top() > rect2.bottom()) return false
-        if(this.bottom() < rect2.top()) return false
-
-        // console.log("checking",rect2)
+    intersects(other: Bounds) {
+        if(this.left() >= other.right()) return false
+        if(this.right() <= other.left()) return false
+        if(this.top() >= other.bottom()) return false
+        if(this.bottom() <= other.top()) return false
         return true
     }
     toString() {
-        return `(${this.x},${this.y})x(${this.w},${this.h})`
+        return `(${this.x.toFixed(1)},${this.y.toFixed(1)})x(${this.w.toFixed(1)},${this.h.toFixed(1)})`
     }
 
     top_right():Point {
@@ -126,6 +137,15 @@ export class Bounds {
 
     set_right(right: number) {
         this.x = right - this.w
+    }
+
+    private sides():Insets {
+        return new Insets(
+            this.top(),
+            this.right(),
+            this.bottom(),
+            this.left()
+        )
     }
 }
 
