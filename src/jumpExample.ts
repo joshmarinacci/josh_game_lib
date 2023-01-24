@@ -110,24 +110,36 @@ export class JumpExample implements TickClient {
         this.player.moveAccel = new Point(0,0)
 
         if(this.keyboard.isPressed('ArrowRight')) {
-            this.player.moveAccel = new Point(1,0)
+            this.player.moveAccel = new Point(0.5,0)
         }
         if(this.keyboard.isPressed('ArrowLeft')) {
-            this.player.moveAccel = new Point(-1,0)
+            this.player.moveAccel = new Point(-0.5,0)
+        }
+        if(this.keyboard.isPressed('Space')) {
+            if(this.player.standing) {
+                this.player.velocity = this.player.velocity.add(new Point(0,-3))
+                this.player.standing = false
+            }
         }
 
         if(this.player.standing) {
             // on the ground
-            this.player.velocity = this.player.velocity.add(this.player.moveAccel).scale(this.player.friction)
-            if (this.player.velocity.x > 1) {
-                this.player.velocity = new Point(1, 0)
-            }
-            if (this.player.velocity.x < -1) {
-                this.player.velocity = new Point(-1, 0)
-            }
+            // apply move left and right and friction
+            this.player.velocity = this.player.velocity.add(this.player.moveAccel)
+                .scale(this.player.friction)
         } else {
             // in the air
+            // apply gravity
             this.player.velocity = this.player.velocity.add(this.player.gravity)
+            // still move left and right but no friction
+            this.player.velocity = this.player.velocity.add(this.player.moveAccel)
+        }
+        // restrict max horizontal speed
+        if (this.player.velocity.x > 1) {
+            this.player.velocity = new Point(1, this.player.velocity.y)
+        }
+        if (this.player.velocity.x < -1) {
+            this.player.velocity = new Point(-1, this.player.velocity.y)
         }
 
         // if in the air
@@ -135,10 +147,23 @@ export class JumpExample implements TickClient {
         this.blocks.forEach(blk => {
             let hit= check_collision_block(this.player.bounds,blk.bounds,this.player.velocity)
             if(hit.collided) {
+                // console.log("hit", hit.direction)
                 // adjust to the block and set velocity back to zero
+                if(hit.direction === 'left' || hit.direction === 'right') {
+                    // if hit horizontally
+                    // only stop the horizontal motion
+                    this.player.velocity = new Point(0,this.player.velocity.y)
+                }
                 new_bounds = this.player.bounds.add(this.player.velocity.scale(hit.tvalue))
-                this.player.velocity = new Point(0,0)
-                this.player.standing = true
+                if(hit.direction === 'down') {
+                    // if hit vertically down. stop and stand
+                    this.player.velocity = new Point(0,0)
+                    this.player.standing = true
+                }
+                if(hit.direction === 'up') {
+                    //if hit up, stop vertical velocity, but still fall down
+                    this.player.velocity = new Point(this.player.velocity.x,0)
+                }
             }
         })
         this.player.bounds = new_bounds
@@ -184,6 +209,7 @@ export class JumpExample implements TickClient {
             ctx.font = '9px sans-serif'
             // ctx.fillText(`v = ${this.ball.velocity.toString()}`, 0, 0)
             ctx.fillText(`player = ${this.player.bounds.toString()}`, 0, 0 + 20)
+            ctx.fillText(`standing ${this.player.standing}`,0,0+40)
             ctx.restore()
         }
         ctx.restore()
