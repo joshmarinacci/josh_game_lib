@@ -16,7 +16,7 @@ export class Point {
         return new Point(this.x-pt.x,this.y-pt.y)
     }
     toString() {
-        return `Point(${this.x},${this.y})`
+        return `Point(${this.x.toFixed(1)},${this.y.toFixed(1)})`
     }
 
     length() {

@@ -126,6 +126,7 @@ export class JumpExample implements TickClient {
         if(this.player.standing) {
             // on the ground
             // apply move left and right and friction
+            this.player.velocity = this.player.velocity.add(this.player.gravity)
             this.player.velocity = this.player.velocity.add(this.player.moveAccel)
                 .scale(this.player.friction)
         } else {
@@ -145,6 +146,7 @@ export class JumpExample implements TickClient {
 
         // if in the air
         let new_bounds = this.player.bounds.add(this.player.velocity)
+        let hit_something = false
         this.blocks.forEach(blk => {
             let hit= check_collision_block(this.player.bounds,blk.bounds,this.player.velocity)
             if(hit.collided) {
@@ -157,16 +159,25 @@ export class JumpExample implements TickClient {
                 }
                 new_bounds = this.player.bounds.add(this.player.velocity.scale(hit.tvalue))
                 if(hit.direction === 'down') {
+                    // if hit ground and already standing, do nothing
                     // if hit vertically down. stop and stand
-                    this.player.velocity = new Point(this.player.velocity.x,0)
-                    this.player.standing = true
+                    this.player.velocity = new Point(this.player.velocity.x, 0)
+                    if(this.player.standing) {
+                        new_bounds = this.player.bounds.add(this.player.velocity)
+                    } else {
+                        this.player.standing = true
+                    }
                 }
                 if(hit.direction === 'up') {
                     //if hit up, stop vertical velocity, but still fall down
                     this.player.velocity = new Point(this.player.velocity.x,0)
                 }
+                hit_something = true
             }
         })
+        if(!hit_something) {
+            this.player.standing = false
+        }
         this.player.bounds = new_bounds
     }
 
@@ -210,6 +221,7 @@ export class JumpExample implements TickClient {
             ctx.font = '9px sans-serif'
             // ctx.fillText(`v = ${this.ball.velocity.toString()}`, 0, 0)
             ctx.fillText(`player = ${this.player.bounds.toString()}`, 0, 0 + 20)
+            ctx.fillText(`player = ${this.player.velocity.toString()}`, 0, 0 + 30)
             ctx.fillText(`standing ${this.player.standing}`,0,0+40)
             ctx.restore()
         }
