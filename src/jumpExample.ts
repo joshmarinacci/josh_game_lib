@@ -29,7 +29,7 @@ const PARAMS = {
 }
 const DEBUG = {
     GRID: true,
-    METRICS: true,
+    METRICS: false,
     GRAVITY:true,
 }
 
@@ -79,6 +79,11 @@ class Block {
 
     draw(time: TimeInfo, ctx: CanvasRenderingContext2D) {
         fillStrokeBounds(ctx,this.bounds,'lightgreen','darkGreen')
+        if(DEBUG.METRICS) {
+            ctx.fillStyle = 'white'
+            ctx.font = '6px sans-serif'
+            ctx.fillText(this.bounds.toString(), this.bounds.x + 2, this.bounds.y + 10)
+        }
     }
 }
 
@@ -114,9 +119,9 @@ export class JumpExample implements TickClient {
         this.player = new Player()
         this.blocks = [
             new Block(new Bounds(0,0,16,SCREEN.h-16)),
-            new Block(new Bounds(SCREEN.w-16,0,16,SCREEN.h-16)),
+            new Block(new Bounds(SCREEN.w-16+1,0,16,SCREEN.h-16)),
             new Block(new Bounds(0,SCREEN.h-16, SCREEN.w,16)),
-            new Block(new Bounds(120,120,16*3,16))
+            new Block(new Bounds(120,120,16*3,16)), //168
         ]
         this.powerups = [
             new Powerup(new Bounds(135,120-16,16,16))
@@ -267,7 +272,7 @@ export class JumpExample implements TickClient {
             ctx.save()
             ctx.translate(30, SCREEN.h - 100)
             ctx.fillStyle = 'white'
-            ctx.font = '9px sans-serif'
+            ctx.font = '6px sans-serif'
             // ctx.fillText(`v = ${this.ball.velocity.toString()}`, 0, 0)
             ctx.fillText(`player = ${this.player.bounds.toString()}`, 0, 0 + 20)
             ctx.fillText(`player = ${this.player.velocity.toString()}`, 0, 0 + 30)
