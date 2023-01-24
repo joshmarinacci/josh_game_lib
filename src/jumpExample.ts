@@ -86,6 +86,7 @@ export class JumpExample implements TickClient {
             new Block(new Bounds(0,0,20,SCREEN.h-20)),
             new Block(new Bounds(SCREEN.w-20,0,20,SCREEN.h-20)),
             new Block(new Bounds(0,SCREEN.h-20, SCREEN.w,20)),
+            new Block(new Bounds(120,120,30,20))
         ]
     }
 
@@ -157,7 +158,7 @@ export class JumpExample implements TickClient {
                 new_bounds = this.player.bounds.add(this.player.velocity.scale(hit.tvalue))
                 if(hit.direction === 'down') {
                     // if hit vertically down. stop and stand
-                    this.player.velocity = new Point(0,0)
+                    this.player.velocity = new Point(this.player.velocity.x,0)
                     this.player.standing = true
                 }
                 if(hit.direction === 'up') {
