@@ -25,7 +25,8 @@ import {
     Fader,
     GameRunner,
     RequestAnimGameRunner,
-    RGB, rgb_to_string,
+    RGB,
+    rgb_to_string,
     TickClient,
     TimeInfo,
     Wiggle
@@ -33,6 +34,7 @@ import {
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
+import {ParticleEffect} from "./effects.js";
 
 class Ball {
     bounds:Bounds
@@ -92,6 +94,7 @@ const SCREEN = new Size(200,200)
 const SCALE = 3
 
 const BORDER_WIDTH = 10
+
 export class PongExample implements TickClient {
     private canvas: HTMLCanvasElement
     private ball: Ball
@@ -100,6 +103,7 @@ export class PongExample implements TickClient {
     private game_runner: GameRunner;
     private paddle: Paddle;
     private keyboard: KeyboardSystem;
+    private particles: ParticleEffect[];
     constructor() {
         this.ball = new Ball()
         this.paddle = new Paddle()
@@ -116,6 +120,7 @@ export class PongExample implements TickClient {
         this.grid = new Grid(Math.floor((SCREEN.w-BORDER_WIDTH*6)/10),8, 10)
         this.grid.forEach((cell:Cell)=> cell.value = 1)
         this.grid.position = new Point(30,30)
+        this.particles = []
     }
 
     attach(element: Element) {
@@ -171,10 +176,18 @@ export class PongExample implements TickClient {
             new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
             this.ball.velocity = this.ball.velocity.multiply(r.reflection)
             let cell = r.target as Cell
+            // hide the cell
             cell.value = 0
-            // this.game_runner.stop()
+            // add a particle effect
+            this.particles.push(new ParticleEffect({
+                position:this.ball.bounds.center(),
+                color: {r:1.0, g:0.7, b:0.0},
+            }))
         }
         this.ball.bounds = new_bounds
+
+        this.particles.forEach(part => part.update(time))
+        this.particles = this.particles.filter(part => part.isAlive())
     }
 
     private draw(time: TimeInfo) {
@@ -222,6 +235,8 @@ export class PongExample implements TickClient {
         // paddle
         this.paddle.draw(ctx)
 
+        this.particles.forEach(part => part.draw(time,ctx))
+
         if(DEBUG.METRICS) {
             // debug
             ctx.save()
@@ -233,6 +248,8 @@ export class PongExample implements TickClient {
             ctx.restore()
         }
         ctx.restore()
+
+
     }
 
     private stroke_bounds(ctx: CanvasRenderingContext2D, bounds: Bounds, color:string) {

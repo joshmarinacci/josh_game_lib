@@ -75,6 +75,13 @@ export function rgb_to_string(rgb: RGB) {
     let b = Math.floor(rgb.b * 255)
     return `rgb(${r} ${g} ${b})`
 }
+export function rgb_to_string_with_alpha(rgb:RGB, alpha:number) {
+    let r = (rgb.r*100).toFixed(0)
+    let g = (rgb.g*100).toFixed(0)
+    let b = (rgb.b*100).toFixed(0)
+    let a = (alpha*100).toFixed(0)
+    return `rgb(${r}% ${g}% ${b}% / ${a}%)`
+}
 
 function lerp(s: number, e: number, t: number): number {
     if (t <= 0) return s

@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "start": "http-server .",
     "test": "tsc && node dist/tests.js"
   },
   "dependencies": {
