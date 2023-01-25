@@ -16,21 +16,23 @@ export interface GameRunner {
 export class RequestAnimGameRunner implements GameRunner {
     private running: boolean;
     private last: number;
+    private scale: number;
 
-    constructor() {
+    constructor(scale:number) {
         this.running = false
         this.last = 0
+        this.scale = scale
     }
 
     start(p: TickClient): void {
         this.running = true
         let self = this
 
-        function going(ts) {
+        function going(ts:number) {
             ts = ts/1000
             let time:TimeInfo=  {
-                sinceStart:ts,
-                delta:ts-self.last
+                sinceStart:ts/self.scale,
+                delta:(ts-self.last)/self.scale
             }
             self.last = ts
              p.tick(time)

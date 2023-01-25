@@ -43,14 +43,16 @@ class Ball {
     constructor() {
         this.fader = new Fader({r:0.9,g:0,b:0},YELLOW,0.150)
         this.bounds = new Bounds(50,150,5,5)
-        this.velocity = new Point(1.2,1.2)
+        this.velocity = new Point(100,100) // in pixels per second
     }
 }
 
 class Paddle {
     bounds:Bounds
+    velocity: Point;
     constructor() {
         this.bounds = new Bounds(50,160,50,10)
+        this.velocity = new Point(150,0) // in pixels per second
     }
 
     draw(ctx: CanvasRenderingContext2D) {
@@ -88,7 +90,8 @@ class Bumper {
 
 const DEBUG = {
     GRID:false,
-    METRICS: false
+    METRICS: false,
+    PARTICLES: true,
 }
 const SCREEN = new Size(200,200)
 const SCALE = 3
@@ -126,44 +129,52 @@ export class PongExample implements TickClient {
     attach(element: Element) {
         this.canvas = element as unknown as HTMLCanvasElement
         this.keyboard = new KeyboardSystem(this.canvas)
+        window.addEventListener('load', () => {
+            this.canvas.focus()
+        })
     }
     tick(time:TimeInfo) {
         this.update(time)
         this.draw(time)
     }
     start() {
-        this.game_runner = new RequestAnimGameRunner()
+        this.game_runner = new RequestAnimGameRunner(1)
         // this.game_runner = new SetIntervalTicker(100)
         this.game_runner.start(this)
     }
 
     private update(time: TimeInfo) {
         if(this.keyboard.isPressed('ArrowRight')) {
-            this.paddle.bounds.add_self(new Point(3,0))
+            let delta = this.paddle.velocity.scale(1*time.delta)
+            this.paddle.bounds.add_self(delta)
             if(this.paddle.bounds.right() > SCREEN.w - BORDER_WIDTH) {
                 this.paddle.bounds.set_right(SCREEN.w - BORDER_WIDTH)
             }
         }
         if(this.keyboard.isPressed('ArrowLeft')) {
-            this.paddle.bounds.add_self(new Point(-3,0))
+            let delta = this.paddle.velocity.scale(-1*time.delta)
+            this.paddle.bounds.add_self(delta)
+            // this.paddle.bounds.add_self(new Point(-3,0))
             if(this.paddle.bounds.left() < BORDER_WIDTH) {
                 this.paddle.bounds.set_left(BORDER_WIDTH)
             }
         }
-        let new_bounds = this.ball.bounds.add(this.ball.velocity)
-        let r3 = check_collision_block(this.ball.bounds,this.paddle.bounds,this.ball.velocity)
+        // console.log('delta',time.delta)
+        let velocity = this.ball.velocity.scale(time.delta)
+        let new_bounds = this.ball.bounds.add(velocity)
+        let r3 = check_collision_block(this.ball.bounds,this.paddle.bounds,velocity)
         if(r3.collided) {
-            new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r3.tvalue))
-            //reflect velocity
+            new_bounds = this.ball.bounds.add(velocity.scale(r3.tvalue))
+            //reflect velocity vector
             this.ball.velocity = this.ball.velocity.multiply(r3.reflection)
             this.ball.fader.start()
         }
         this.blocks.forEach(bumper => {
             let blk = bumper.bounds
-            let r = check_collision_block(this.ball.bounds, blk, this.ball.velocity)
+            let r = check_collision_block(this.ball.bounds, blk, velocity)
             if(r.collided) {
                 //new bounds based on the fraction of velocity before hit the barrier
-                new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
+                new_bounds = this.ball.bounds.add(velocity.scale(r.tvalue))
                 //reflect velocity
                 this.ball.velocity = this.ball.velocity.multiply(r.reflection)
                 this.ball.fader.start()
@@ -171,23 +182,24 @@ export class PongExample implements TickClient {
                 bumper.wiggle.start()
             }
         })
-        let r = check_collision_grid(this.grid,this.ball.bounds, this.ball.velocity)
+        let r = check_collision_grid(this.grid,this.ball.bounds, velocity)
         if(r.collided) {
-            new_bounds = this.ball.bounds.add(this.ball.velocity.scale(r.tvalue))
+            new_bounds = this.ball.bounds.add(velocity.scale(r.tvalue))
             this.ball.velocity = this.ball.velocity.multiply(r.reflection)
             let cell = r.target as Cell
             // hide the cell
             cell.value = 0
             // add a particle effect
             this.particles.push(new ParticleEffect({
+                count: 30,
                 position:this.ball.bounds.center(),
-                color: {r:1.0, g:0.7, b:0.0},
+                color: {r:252/255, g:147/255, b:230/255},
             }))
         }
         this.ball.bounds = new_bounds
 
-        this.particles.forEach(part => part.update(time))
-        this.particles = this.particles.filter(part => part.isAlive())
+        if(DEBUG.PARTICLES) this.particles.forEach(part => part.update(time))
+        if(DEBUG.PARTICLES) this.particles = this.particles.filter(part => part.isAlive())
     }
 
     private draw(time: TimeInfo) {
@@ -235,7 +247,7 @@ export class PongExample implements TickClient {
         // paddle
         this.paddle.draw(ctx)
 
-        this.particles.forEach(part => part.draw(time,ctx))
+        if(DEBUG.PARTICLES) this.particles.forEach(part => part.draw(time,ctx))
 
         if(DEBUG.METRICS) {
             // debug

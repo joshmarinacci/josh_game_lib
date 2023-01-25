@@ -143,7 +143,7 @@ export class JumpExample implements TickClient {
         this.draw(time)
     }
     start() {
-        this.game_runner = new RequestAnimGameRunner()
+        this.game_runner = new RequestAnimGameRunner(1.0)
         // this.game_runner = new SetIntervalTicker(100)
         this.game_runner.start(this)
     }

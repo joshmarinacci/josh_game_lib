@@ -11,6 +11,7 @@ type Particle = {
 export type ParticleEffectParams = {
     position:Point
     color:RGB,
+    count:number,
 }
 export class ParticleEffect {
     private particles: Particle[];
@@ -21,23 +22,23 @@ export class ParticleEffect {
 
     constructor(params:ParticleEffectParams) {
         this.position = params.position
-        this.start_count = 10
+        this.start_count = params.count
         this.particles = []
         for (let i = 0; i < this.start_count; i++) {
             this.particles.push({
                 position: params.position,
-                velocity: new Point(rand(-1, 1), rand(-1, 1)),
+                velocity: new Point(rand(-100, 100), rand(-100, 100)),
                 color: params.color,
-                size: rand(3, 10)
+                size: rand(2, 7)
             })
         }
-        this.lifetime = 0.5
+        this.lifetime = 1.0
         this.age = 0
     }
 
     update(time: TimeInfo) {
         this.age += time.delta
-        this.particles.forEach(part => part.position = part.position.add(part.velocity))
+        this.particles.forEach(part => part.position = part.position.add(part.velocity.scale(time.delta)))
     }
 
     draw(time: TimeInfo, ctx: CanvasRenderingContext2D) {
