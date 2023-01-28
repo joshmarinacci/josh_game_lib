@@ -1,46 +1,29 @@
 /*
 
-game entity
-save of the entity. can hurt the player? is a block? has special behaviors
-velocity
-add a block view to draw as a rectangle with a border
-when a bumper is hit, check if bumper, apply a fade effect
-fade effect brightens then darkens color over a certain time period.
-maintains own state. can be removed once done.
-how do we pass around events? some sort of event handlers? listeners?
-sound effect triggered when bumper is hit. what is the connection for this?
-jiggle effect: draws a block adjusted left or right over time. doesn't effect bounds collision.
+make game reset when grid cleared with different sets of levels
+make 3 levels using the same basic grid, but start off with them bigger then become
+smaller?
 
-if ball hits paddle and left or right is currently pressed, then adjust the bounce with a tiny bit of spin.
-also blink the ball when hit and trigger sound effect.
 
-start with a Paddle and Ball and Bumper classes, then try to collect common functions
-
-* add angle adjustment if hits a moving object
-* draw grid object and 'moving' object with different colors.
-* be able to change grid cell after a collision. needs a way to get the grid coords back.
  */
 import {Bounds, Point, Size} from "./math.js";
-import {
-    GameRunner,
-    RequestAnimGameRunner,
-    TickClient,
-    TimeInfo
-} from "./time.js";
+import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
 import {Fader, ParticleEffect, Wiggle} from "./effects.js";
-import {RGB, rgb_to_string} from "./color";
+import {rgb_to_string, VIOLET, WHITE, YELLOW} from "./color.js";
 
+const DEFAULT_BALL_BOUNDS = new Bounds(50,150,5,5)
+const DEFAULT_BALL_VELOCITY = new Point(50,-50) // speed in pixels per second
 class Ball {
     bounds:Bounds
     velocity:Point
     fader:Fader
     constructor() {
         this.fader = new Fader({r:0.9,g:0,b:0},YELLOW,0.150)
-        this.bounds = new Bounds(50,150,5,5)
-        this.velocity = new Point(100,100) // in pixels per second
+        this.bounds = DEFAULT_BALL_BOUNDS.copy()
+        this.velocity = DEFAULT_BALL_VELOCITY
     }
 }
 
@@ -57,11 +40,6 @@ class Paddle {
         ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
     }
 }
-const RED:RGB = {r:1,g:0,b:0}
-const BLACK:RGB = {r:0,g:0,b:0}
-const WHITE:RGB = {r:1,g:1,b:1}
-const VIOLET:RGB = {r:0.3,g:0,b:0.8}
-const YELLOW:RGB = {r:1.0, g:0.8, b:0.1}
 
 class Bumper {
     bounds:Bounds
@@ -95,6 +73,34 @@ const SCALE = 3
 
 const BORDER_WIDTH = 10
 
+type Level = {
+    grid:Grid
+    velocity:Point
+}
+
+function init_level_1():Level {
+    let grid = new Grid(10,5, 14)
+    grid.forEach((cell: Cell) => cell.value = 1)
+    grid.position = new Point(30,30)
+    return {
+        velocity: new Point(50,-50),
+        grid: grid
+    }
+}
+function init_level_2():Level {
+    let grid = new Grid(10,8, 14)
+    grid.forEach((cell: Cell) => cell.value = 1)
+    grid.position = new Point(30,30)
+    return {
+        velocity: new Point(70,-70),
+        grid: grid
+    }
+}
+
+const LEVEL1 = init_level_1();
+const LEVEL2 = init_level_2()
+
+
 export class PongExample implements TickClient {
     private canvas: HTMLCanvasElement
     private ball: Ball
@@ -104,11 +110,13 @@ export class PongExample implements TickClient {
     private paddle: Paddle;
     private keyboard: KeyboardSystem;
     private particles: ParticleEffect[];
+    private levels: Level[];
+    private levelIndex: number;
+    private level: Level;
     constructor() {
         this.ball = new Ball()
         this.paddle = new Paddle()
         const top_bumper = new Bumper(0,0,SCREEN.w,BORDER_WIDTH)
-        const bot_bumper = new Bumper(0,SCREEN.h-BORDER_WIDTH,SCREEN.w,BORDER_WIDTH)
         const right_bumper = new Bumper(SCREEN.w-BORDER_WIDTH,BORDER_WIDTH,
             BORDER_WIDTH,SCREEN.h-BORDER_WIDTH*2)
         right_bumper.wiggle.offset = new Point(2,0)
@@ -116,10 +124,12 @@ export class PongExample implements TickClient {
             BORDER_WIDTH,SCREEN.h-BORDER_WIDTH-BORDER_WIDTH)
         left_bumper.wiggle.offset = new Point(2,0)
 
-        this.blocks = [top_bumper,bot_bumper,right_bumper,left_bumper]
-        this.grid = new Grid(Math.floor((SCREEN.w-BORDER_WIDTH*6)/10),8, 10)
-        this.grid.forEach((cell:Cell)=> cell.value = 1)
-        this.grid.position = new Point(30,30)
+        this.blocks = [top_bumper,right_bumper,left_bumper]
+        this.levels = [LEVEL1, LEVEL2]
+        this.levelIndex = 0
+        this.level = this.levels[this.levelIndex]
+        this.grid = this.level.grid
+
         this.particles = []
     }
 
@@ -132,6 +142,8 @@ export class PongExample implements TickClient {
     }
     tick(time:TimeInfo) {
         this.update(time)
+        this.check_die(time)
+        this.check_win(time)
         this.draw(time)
     }
     start() {
@@ -271,5 +283,44 @@ export class PongExample implements TickClient {
         ctx.fillRect(bounds.x, bounds.y, bounds.w-1, bounds.h-1)
     }
 
+    private check_win(time: TimeInfo) {
+        let count = 0
+        this.grid.forEach((cell)=>{
+            count += cell.value
+        })
+        if(count <= 0) {
+            this.go_next_level()
+        }
+    }
+
+    private go_next_level() {
+        this.levelIndex = this.levelIndex+1
+        console.log("new level",this.levelIndex)
+        if(this.levelIndex >= this.levels.length) {
+            this.win_game()
+        } else {
+            this.level = this.levels[this.levelIndex]
+            this.grid = this.level.grid
+            this.reset_ball()
+        }
+    }
+
+    private reset_ball() {
+        this.ball.bounds = DEFAULT_BALL_BOUNDS.copy()
+        this.ball.velocity = this.level.velocity.copy()
+    }
+
+    private check_die(time: TimeInfo) {
+        if(this.ball.bounds.y > SCREEN.h) {
+            console.log("died")
+            this.reset_ball()
+        }
+
+    }
+
+    private win_game() {
+        console.log("you won the game")
+        this.game_runner.stop()
+    }
 }
 

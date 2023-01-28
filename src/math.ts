@@ -42,6 +42,10 @@ export class Point {
         if(y > max.y) y = max.y
         return new Point(x,y)
     }
+
+    copy() {
+        return new Point(this.x,this.y)
+    }
 }
 export class Size {
     readonly w: number;

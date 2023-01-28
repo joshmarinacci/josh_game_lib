@@ -18,3 +18,9 @@ export function rgb_to_string_with_alpha(rgb: RGB, alpha: number) {
     let a = (alpha * 100).toFixed(0)
     return `rgb(${r}% ${g}% ${b}% / ${a}%)`
 }
+
+export const RED: RGB = {r: 1, g: 0, b: 0}
+export const BLACK: RGB = {r: 0, g: 0, b: 0}
+export const WHITE: RGB = {r: 1, g: 1, b: 1}
+export const VIOLET: RGB = {r: 0.3, g: 0, b: 0.8}
+export const YELLOW: RGB = {r: 1.0, g: 0.8, b: 0.1}
