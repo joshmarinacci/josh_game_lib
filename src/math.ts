@@ -1,3 +1,5 @@
+import {RGB} from "./color";
+
 export class Point {
     readonly y: number;
     readonly x: number;
@@ -163,3 +165,16 @@ export function rand(min: number, max: number) {
     return min + Math.random()*(max-min)
 }
 
+function lerp(s: number, e: number, t: number): number {
+    if (t <= 0) return s
+    if (t >= 1) return e
+    return s + (e - s) * t
+}
+
+export function lerp_rgb(s: RGB, e: RGB, t: number): RGB {
+    return {
+        r: lerp(s.r, e.r, t),
+        g: lerp(s.g, e.g, t),
+        b: lerp(s.b, e.b, t),
+    }
+}

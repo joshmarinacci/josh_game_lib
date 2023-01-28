@@ -22,19 +22,16 @@ start with a Paddle and Ball and Bumper classes, then try to collect common func
  */
 import {Bounds, Point, Size} from "./math.js";
 import {
-    Fader,
     GameRunner,
     RequestAnimGameRunner,
-    RGB,
-    rgb_to_string,
     TickClient,
-    TimeInfo,
-    Wiggle
+    TimeInfo
 } from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
-import {ParticleEffect} from "./effects.js";
+import {Fader, ParticleEffect, Wiggle} from "./effects.js";
+import {RGB, rgb_to_string} from "./color";
 
 class Ball {
     bounds:Bounds

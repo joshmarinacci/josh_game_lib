@@ -1,7 +1,8 @@
-import {GameRunner, RequestAnimGameRunner, RGB, rgb_to_string, TickClient, TimeInfo} from "./time.js";
+import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 import {KeyboardSystem} from "./keyboard.js";
 import {Bounds, Point, Size} from "./math.js";
 import {check_collision_block} from "./physics.js";
+import {RGB, rgb_to_string} from "./color";
 
 
 /*
