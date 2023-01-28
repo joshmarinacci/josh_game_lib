@@ -4,6 +4,14 @@ export type RGB = {
     b: number
 }
 
+export function darken(rgb:RGB):RGB {
+    return {
+        r:rgb.r*0.8,
+        g:rgb.g*0.8,
+        b:rgb.b*0.8
+    }
+}
+
 export function rgb_to_string(rgb: RGB) {
     let r = Math.floor(rgb.r * 255)
     let g = Math.floor(rgb.g * 255)

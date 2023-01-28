@@ -1,9 +1,11 @@
 import {Bounds, Point} from "./math.js";
 import {check_collision_block, CollisionResult} from "./physics.js";
+import {darken, RED, RGB, rgb_to_string} from "./color.js";
 
 export type Cell = {
     value: number
-    color: string
+    color: RGB
+    border: RGB
 }
 
 export class Grid {
@@ -22,14 +24,12 @@ export class Grid {
             for (let i = 0; i < this.w; i++) {
                 this.cells.push({
                     value: 0,
-                    color: 'orange'
+                    color: RED,
+                    border: darken(RED)
                 })
             }
         }
 
-        this.get_cell(0, 2).value = 1
-        this.get_cell(3, 1).value = 1
-        this.get_cell(3, 3).value = 1
     }
 
     draw(ctx: CanvasRenderingContext2D) {
@@ -43,9 +43,9 @@ export class Grid {
                 let y = j * this.size
                 let ww = this.size - 2
                 let hh = this.size - 2
-                ctx.fillStyle = '#4444ff'
+                ctx.fillStyle = rgb_to_string(cell.color)
                 ctx.fillRect(x,y,ww,hh)
-                ctx.strokeStyle = "#0000ff"
+                ctx.strokeStyle = rgb_to_string(cell.border)
                 ctx.lineWidth = 1
                 ctx.strokeRect(x, y, ww, hh)
             }

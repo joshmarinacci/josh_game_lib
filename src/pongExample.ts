@@ -4,15 +4,19 @@ make game reset when grid cleared with different sets of levels
 make 3 levels using the same basic grid, but start off with them bigger then become
 smaller?
 
+level 1: 10 x 3. 50pps, pure blue
+level 2: 10 x 4. 60pps, gradient of blue to green
+level 3: 9 x 7 red heart, 70pps
+
 
  */
-import {Bounds, Point, Size} from "./math.js";
+import {Bounds, lerp_rgb, Point, Size} from "./math.js";
 import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
 import {Fader, ParticleEffect, Wiggle} from "./effects.js";
-import {rgb_to_string, VIOLET, WHITE, YELLOW} from "./color.js";
+import {BLACK, darken, RED, rgb_to_string, VIOLET, WHITE, YELLOW} from "./color.js";
 
 const DEFAULT_BALL_BOUNDS = new Bounds(50,150,5,5)
 const DEFAULT_BALL_VELOCITY = new Point(50,-50) // speed in pixels per second
@@ -78,27 +82,76 @@ type Level = {
     velocity:Point
 }
 
-function init_level_1():Level {
+function init_gradient():Level {
     let grid = new Grid(10,5, 14)
-    grid.forEach((cell: Cell) => cell.value = 1)
+    grid.forEach((cell: Cell, index:Point) => {
+        cell.value = 1
+        cell.color = lerp_rgb(RED,YELLOW,index.y/4)
+        cell.border = darken(cell.color)
+    })
     grid.position = new Point(30,30)
     return {
         velocity: new Point(50,-50),
         grid: grid
     }
 }
-function init_level_2():Level {
+function init_checkerboard():Level {
     let grid = new Grid(10,8, 14)
-    grid.forEach((cell: Cell) => cell.value = 1)
+    grid.forEach((cell: Cell, index:Point) => {
+        if((index.x + index.y) % 2 === 0) {
+            cell.value = 1
+            cell.color = RED
+            cell.border = RED
+        } else {
+            cell.value = 0
+        }
+    })
     grid.position = new Point(30,30)
+    return {
+        velocity: new Point(60,-60),
+        grid: grid
+    }
+}
+function init_heart():Level {
+    let grid = new Grid(9,8, 14)
+    grid.position = new Point(40,10)
+    let pattern = `
+    ..XX.XX..
+    .XXXXXXX.
+    XXXXXXXXX
+    XXXXXXXXX
+    XXXXXXXXX
+    .XXXXXXX.
+    ..XXXXX..
+    ...XXX...
+    `
+    let lines =  pattern.trim().split('\n')
+    let y = 0
+    for(let line of lines) {
+        line = line.trim()
+        let x = 0
+        for(let ch of line) {
+            let cell = grid.get_cell(x,y)
+            if(ch === '.') {
+                cell.value = 0
+            } else {
+                cell.value = 1
+            }
+            x++
+        }
+        y++
+    }
     return {
         velocity: new Point(70,-70),
         grid: grid
     }
 }
 
-const LEVEL1 = init_level_1();
-const LEVEL2 = init_level_2()
+const LEVELS = [
+    init_heart(),
+    init_checkerboard(),
+    init_gradient(),
+]
 
 
 export class PongExample implements TickClient {
@@ -125,7 +178,7 @@ export class PongExample implements TickClient {
         left_bumper.wiggle.offset = new Point(2,0)
 
         this.blocks = [top_bumper,right_bumper,left_bumper]
-        this.levels = [LEVEL1, LEVEL2]
+        this.levels = LEVELS
         this.levelIndex = 0
         this.level = this.levels[this.levelIndex]
         this.grid = this.level.grid
