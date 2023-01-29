@@ -8,6 +8,7 @@ level 1: 10 x 3. 50pps, pure blue
 level 2: 10 x 4. 60pps, gradient of blue to green
 level 3: 9 x 7 red heart, 70pps
 
+111116JF2KzyFRG2qu7K9JejxwSqeeqc6p3PdyvDLdNR3X67xiPLegK1pEcrv38Z6pGRHnkujHfbKAznPcJ7WN7XmfBhh7X12sCyPrGyuye75YHMGhxZ6Ghm
 
  */
 import {Bounds, lerp_rgb, Point, Size} from "./math.js";
@@ -17,6 +18,15 @@ import {Cell, check_collision_grid, Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
 import {Fader, ParticleEffect, Wiggle} from "./effects.js";
 import {BLACK, darken, RED, rgb_to_string, VIOLET, WHITE, YELLOW} from "./color.js";
+
+// @ts-ignore
+const sfxr = window.sfxr
+const thunk = sfxr.toAudio("5EoyNVSymuxD8s7HP1ixqdaCn5uVGEgwQ3kJBR7bSoApFQzm7E4zZPW2EcXm3jmNdTtTPeDuvwjY8z4exqaXz3NGBHRKBx3igYfBBMRBxDALhBSvzkF6VE2Pv");
+thunk.setVolume(0.3)
+const shink = sfxr.toAudio("1111183hPJjHhxh1JS7tXZgQ2zVBcM8SwCrDSXmAm5dEVyxckp8SxyDpwFJvkjK1kDzZswufTq2kR4kjnQPgee4mJc1q6Tor9rP47ssgZtfkBnndAnSMMSfZ")
+shink.setVolume(0.3)
+const punch = sfxr.toAudio("7BMHBGFN3zeFYKifK1UC1EMF2VpPaNsHXx9CPLmETvKoJvo1sZGDs9f2jrB99VNngrwh9W2tQHgWcTGzHMyiADxLftDyqML91B9arfPzJq6ZPuVCqKwbRJHuH")
+punch.setVolume(0.3)
 
 const DEFAULT_BALL_BOUNDS = new Bounds(50,150,5,5)
 const DEFAULT_BALL_VELOCITY = new Point(50,-50) // speed in pixels per second
@@ -224,17 +234,20 @@ export class PongExample implements TickClient {
         // console.log('delta',time.delta)
         let velocity = this.ball.velocity.scale(time.delta)
         let new_bounds = this.ball.bounds.add(velocity)
+        //hit paddle
         let r3 = check_collision_block(this.ball.bounds,this.paddle.bounds,velocity)
         if(r3.collided) {
             new_bounds = this.ball.bounds.add(velocity.scale(r3.tvalue))
             //reflect velocity vector
             this.ball.velocity = this.ball.velocity.multiply(r3.reflection)
             this.ball.fader.start()
+            thunk.play()
         }
         this.blocks.forEach(bumper => {
             let blk = bumper.bounds
             let r = check_collision_block(this.ball.bounds, blk, velocity)
             if(r.collided) {
+                shink.play()
                 //new bounds based on the fraction of velocity before hit the barrier
                 new_bounds = this.ball.bounds.add(velocity.scale(r.tvalue))
                 //reflect velocity
@@ -257,6 +270,7 @@ export class PongExample implements TickClient {
                 position:this.ball.bounds.center(),
                 color: {r:252/255, g:147/255, b:230/255},
             }))
+            punch.play()
         }
         this.ball.bounds = new_bounds
 
