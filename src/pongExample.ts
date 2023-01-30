@@ -28,6 +28,9 @@ shink.setVolume(0.3)
 const punch = sfxr.toAudio("7BMHBGFN3zeFYKifK1UC1EMF2VpPaNsHXx9CPLmETvKoJvo1sZGDs9f2jrB99VNngrwh9W2tQHgWcTGzHMyiADxLftDyqML91B9arfPzJq6ZPuVCqKwbRJHuH")
 punch.setVolume(0.3)
 
+const sound_track = "https://www.beepbox.co/#9n31s0k0l00e03t2ma7g0fj07r1i0o432T1v1uc0f10l7q011d23A4F3B5Q0506Pd474E361963279T0v1u58f0q0x10ob1d03w5h1E1b7T1v1u3df0qwx10p511d08AcFbBfQ269cP969bE2bi7iT4v1uf0f0q011z6666ji8k8k3jSBKSJJAArriiiiii07JCABrzrrrrrrr00YrkqHrsrrrrjr005zrAqzrjzrrqr1jRjrqGGrrzsrsA099ijrABJJJIAzrrtirqrqjqixzsrAjrqjiqaqqysttAJqjikikrizrHtBJJAzArzrIsRCITKSS099ijrAJS____Qg99habbCAYrDzh00E0b4h400000000h4g000000014h000000004h400000000p1WBWqfibSqfVgzjhWhvgnVBpp60BWqfijtfMs600aqcMnQ5Z17ghQ4t5B960"
+
+
 const DEFAULT_BALL_BOUNDS = new Bounds(50,150,5,5)
 const DEFAULT_BALL_VELOCITY = new Point(50,-50) // speed in pixels per second
 class Ball {
