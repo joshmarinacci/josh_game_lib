@@ -1,5 +1,5 @@
 import {lerp_number, Point, range, Size} from "./math.js";
-import {BLUE, RED, RGB} from "./color.js";
+import {BLUE, GREEN, RED, RGB} from "./color.js";
 import {RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 
 class Rect {
@@ -187,15 +187,19 @@ function make_example_4():Example {
 
 function make_example_5():Example {
     //Spread to create objects over one or two dimensions
-    let rects = range(4).map(i => new Rect())
-    rects[2].position.x = 100
+    let rects = range(10).map(i => new Rect())
     twerp.spread(rects,{
         prop:'position',
         from: new Point(0,0),
         to: new Point(500,0),
     })
+    twerp.spread(rects,{
+        prop:'color',
+        from: GREEN,
+        to:BLUE,
+    })
     return {
-        title:'spread 5 rects',
+        title:'spread 5 rects position and color',
         rects:rects,
         canvas:make_canvas(),
     }
