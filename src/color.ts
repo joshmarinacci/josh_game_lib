@@ -16,6 +16,13 @@ export class RGB {
             lerp_number(t,this.b,that.b),
         )
     }
+
+    toCSSString():string {
+        let r = Math.floor(this.r * 255)
+        let g = Math.floor(this.g * 255)
+        let b = Math.floor(this.b * 255)
+        return `rgb(${r} ${g} ${b})`
+    }
 }
 
 export function darken(rgb:RGB):RGB {
@@ -27,10 +34,7 @@ export function darken(rgb:RGB):RGB {
 }
 
 export function rgb_to_string(rgb: RGB) {
-    let r = Math.floor(rgb.r * 255)
-    let g = Math.floor(rgb.g * 255)
-    let b = Math.floor(rgb.b * 255)
-    return `rgb(${r} ${g} ${b})`
+    return rgb.toCSSString()
 }
 
 export function rgb_to_string_with_alpha(rgb: RGB, alpha: number) {

@@ -181,3 +181,11 @@ export function lerp_number(t:number, s: number, e: number): number {
 export function lerp_rgb(s: RGB, e: RGB, t: number): RGB {
     return s.lerp(t,e)
 }
+
+export function range(count: number): number[] {
+    let list = []
+    for (let i = 0; i < count; i++) {
+        list.push(i)
+    }
+    return list
+}

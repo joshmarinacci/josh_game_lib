@@ -1,5 +1,5 @@
-import {Bounds, lerp_number, Point, Size} from "./math.js";
-import {BLUE, RED, RGB, rgb_to_string} from "./color.js";
+import {lerp_number, Point, range, Size} from "./math.js";
+import {BLUE, RED, RGB} from "./color.js";
 import {RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 
 class Rect {
@@ -17,14 +17,20 @@ class Rect {
 
 
 type AnimProps = {
-    prop:string
+    prop?:string
     from:any
     to:any
     over:number
 }
+
+type SpreadProps = {
+    prop:string
+    from:any
+    to:any
+}
 class TwerpAnim {
     private target: any;
-    private prop: string;
+    private prop?: string;
     private from: any;
     private to: any;
     private duration: number;
@@ -51,22 +57,26 @@ class TwerpAnim {
             this.started = true
         }
         let t = this.curr_time/this.duration
-        // console.log("t is",t.toFixed(2),this.from.lerp)
-        let val = this.lerp(t,this.from,this.to)
-        // console.log(t.toFixed(2),val)
-        this.target[this.prop] = val
+        // console.log("t is",t.toFixed(2),this.from)
+        if(!this.prop) {
+            Object.keys(this.from).forEach(key => {
+                this.target[key] = lerp_any(t, this.from[key], this.to[key])
+            })
+        } else {
+            this.target[this.prop] = lerp_any(t, this.from, this.to)
+        }
         if(this.curr_time >= this.duration) {
             this.alive = false
         }
         this.curr_time += time.delta
     }
 
-    private lerp(t: number, from: any, to: any):any {
-        if(typeof from.lerp === 'function') {
-            return from.lerp(t,to)
-        } else {
-            return lerp_number(t, from, to)
-        }
+}
+function lerp_any(t: number, from: any, to: any):any {
+    if(typeof from.lerp === 'function') {
+        return from.lerp(t,to)
+    } else {
+        return lerp_number(t, from, to)
     }
 }
 
@@ -83,12 +93,20 @@ class Twerp {
     tween(target: any, opts: AnimProps) {
         this.anims.push(new TwerpAnim(target,opts))
     }
+
+    spread(rects: Rect[], opt: SpreadProps) {
+        rects.forEach((rect,i) => {
+            let t= i/(rects.length-1)
+            rect[opt.prop] = lerp_any(t, opt.from, opt.to)
+        })
+    }
 }
 const twerp = new Twerp()
 
 type Example = {
+    title:string,
     canvas:HTMLCanvasElement,
-    rect:Rect,
+    rects:Rect[],
 }
 
 function make_canvas() {
@@ -105,16 +123,16 @@ function make_example_1():Example {
     rect1.position.y = 25
     twerp.tween(rect1.position,{
         prop:'x',
-        from:50,
+        from:0,
         to:500,
         over:2,
     })
      return {
+        title:'x 0 -> 500',
         canvas: make_canvas(),
-        rect: rect1
+        rects: [rect1],
     }
 }
-
 function make_example_2():Example {
     //example 2: animate left to right and top to bottom over 2 seconds.
     let rect2 = new Rect()
@@ -125,12 +143,12 @@ function make_example_2():Example {
         over:2,
     })
     return {
-        rect:rect2,
+        title:'postion 0,0 -> 500,50',
+        rects:[rect2],
         canvas:make_canvas()
     }
 
 }
-
 function make_example_3():Example {
     //example 3: animate color from red to blue over 2 seconds
     let rect3 = new Rect()
@@ -141,8 +159,45 @@ function make_example_3():Example {
         over:2,
     })
     return {
-        rect:rect3,
+        title:'color RED -> BLUE',
+        rects:[rect3],
         canvas:make_canvas()
+    }
+}
+function make_example_4():Example {
+    // move rect and change color at the same time
+    let rect = new Rect()
+    twerp.tween(rect,{
+        from:{
+            "position":new Point(0,0),
+            "color":RED,
+        },
+        to: {
+            "position":new Point(500,50),
+            "color":BLUE
+        },
+        over:2,
+    })
+    return {
+        title:'tween position and color together',
+        rects:[rect],
+        canvas:make_canvas()
+    }
+}
+
+function make_example_5():Example {
+    //Spread to create objects over one or two dimensions
+    let rects = range(4).map(i => new Rect())
+    rects[2].position.x = 100
+    twerp.spread(rects,{
+        prop:'position',
+        from: new Point(0,0),
+        to: new Point(500,0),
+    })
+    return {
+        title:'spread 5 rects',
+        rects:rects,
+        canvas:make_canvas(),
     }
 }
 
@@ -156,6 +211,8 @@ export class AnimExample implements TickClient {
         this.examples.push(make_example_1())
         this.examples.push(make_example_2())
         this.examples.push(make_example_3())
+        this.examples.push(make_example_4())
+        this.examples.push(make_example_5())
 
         this.runner = new RequestAnimGameRunner(1)
         this.runner.start(this)
@@ -166,8 +223,13 @@ export class AnimExample implements TickClient {
             let ctx = ex.canvas.getContext('2d')
             ctx.fillStyle = 'white'
             ctx.fillRect(0,0,ex.canvas.width,ex.canvas.height)
-            ctx.fillStyle = rgb_to_string(ex.rect.color)
-            ctx.fillRect(ex.rect.position.x,ex.rect.position.y,ex.rect.size.w,ex.rect.size.h)
+            ex.rects.forEach(rect => {
+                ctx.fillStyle = rect.color.toCSSString()
+                ctx.fillRect(rect.position.x,rect.position.y,rect.size.w,rect.size.h)
+            })
+            ctx.fillStyle = 'black'
+            ctx.font = '16px sans-serif'
+            ctx.fillText(ex.title, 10,ex.canvas.height-10)
         })
     }
 }
