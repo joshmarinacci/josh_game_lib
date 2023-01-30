@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style type="text/css">
+    body {
+      background-color: black;
+      display: flex;
+      flex-direction:column;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      border: 1px solid black;
+    }
+
+  </style>
+</head>
+<body>
+
+<script src="../node_modules/jsfxr/riffwave.js"></script>
+<script src="../node_modules/jsfxr/sfxr.js"></script>
+<script type="module">
+  import {AnimExample} from '../dist/animExample.js'
+  let example = new AnimExample()
+  example.start()
+</script>
+</body>
+</html>

@@ -1,15 +1,29 @@
-export type RGB = {
+import {lerp_number} from "./math.js";
+
+export class RGB {
     r: number
     g: number
     b: number
+    constructor(r:number, g:number, b:number) {
+        this.r = r
+        this.g = g
+        this.b = b
+    }
+    lerp(t:number, that:RGB):RGB {
+        return new RGB(
+            lerp_number(t,this.r,that.r),
+            lerp_number(t,this.g,that.g),
+            lerp_number(t,this.b,that.b),
+        )
+    }
 }
 
 export function darken(rgb:RGB):RGB {
-    return {
-        r:rgb.r*0.8,
-        g:rgb.g*0.8,
-        b:rgb.b*0.8
-    }
+    return new RGB(
+        rgb.r*0.8,
+        rgb.g*0.8,
+        rgb.b*0.8
+    )
 }
 
 export function rgb_to_string(rgb: RGB) {
@@ -27,8 +41,10 @@ export function rgb_to_string_with_alpha(rgb: RGB, alpha: number) {
     return `rgb(${r}% ${g}% ${b}% / ${a}%)`
 }
 
-export const RED: RGB = {r: 1, g: 0, b: 0}
-export const BLACK: RGB = {r: 0, g: 0, b: 0}
-export const WHITE: RGB = {r: 1, g: 1, b: 1}
-export const VIOLET: RGB = {r: 0.3, g: 0, b: 0.8}
-export const YELLOW: RGB = {r: 1.0, g: 0.8, b: 0.1}
+export const RED:   RGB = new RGB(1,0,0);
+export const GREEN: RGB = new RGB(0,1,0)
+export const BLUE:  RGB = new RGB(0,0,1)
+export const BLACK: RGB = new RGB(0,0,0)
+export const WHITE: RGB = new RGB(1,1,1)
+export const VIOLET: RGB = new RGB(0.3,0,0.8)
+export const YELLOW: RGB = new RGB(1,0.8,0.1)

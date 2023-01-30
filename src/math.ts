@@ -1,8 +1,8 @@
-import {RGB} from "./color";
+import {RGB} from "./color.js";
 
 export class Point {
-    readonly y: number;
-    readonly x: number;
+    y: number;
+    x: number;
     constructor(x: number, y: number) {
         this.x = x
         this.y = y
@@ -45,6 +45,9 @@ export class Point {
 
     copy() {
         return new Point(this.x,this.y)
+    }
+    lerp(t:number, that:Point):Point {
+        return new Point(lerp_number(t,this.x,that.x),lerp_number(t,this.y,that.y))
     }
 }
 export class Size {
@@ -169,16 +172,12 @@ export function rand(min: number, max: number) {
     return min + Math.random()*(max-min)
 }
 
-function lerp(s: number, e: number, t: number): number {
+export function lerp_number(t:number, s: number, e: number): number {
     if (t <= 0) return s
     if (t >= 1) return e
     return s + (e - s) * t
 }
 
 export function lerp_rgb(s: RGB, e: RGB, t: number): RGB {
-    return {
-        r: lerp(s.r, e.r, t),
-        g: lerp(s.g, e.g, t),
-        b: lerp(s.b, e.b, t),
-    }
+    return s.lerp(t,e)
 }

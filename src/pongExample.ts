@@ -17,7 +17,7 @@ import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
 import {Fader, ParticleEffect, Wiggle} from "./effects.js";
-import {BLACK, darken, RED, rgb_to_string, VIOLET, WHITE, YELLOW} from "./color.js";
+import {BLACK, darken, RED, RGB, rgb_to_string, VIOLET, WHITE, YELLOW} from "./color.js";
 
 // @ts-ignore
 const sfxr = window.sfxr
@@ -38,7 +38,7 @@ class Ball {
     velocity:Point
     fader:Fader
     constructor() {
-        this.fader = new Fader({r:0.9,g:0,b:0},YELLOW,0.150)
+        this.fader = new Fader(new RGB(0.9,0,0),YELLOW,0.150)
         this.bounds = DEFAULT_BALL_BOUNDS.copy()
         this.velocity = DEFAULT_BALL_VELOCITY
     }
@@ -271,7 +271,7 @@ export class PongExample implements TickClient {
             this.particles.push(new ParticleEffect({
                 count: 30,
                 position:this.ball.bounds.center(),
-                color: {r:252/255, g:147/255, b:230/255},
+                color: new RGB(252/255, 147/255, 230/255),
             }))
             punch.play()
         }
