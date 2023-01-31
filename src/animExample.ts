@@ -2,16 +2,41 @@ import {lerp_number, Point, range, Size} from "./math.js";
 import {BLUE, GREEN, RED, RGB} from "./color.js";
 import {RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 
-class Rect {
+abstract class Shape {
     color: RGB;
     position: Point;
-    size: Size;
     alpha: number;
+    scale: number;
+    rotate: number;
     constructor() {
         this.position = new Point(0,0)
-        this.size = new Size(50,50)
+        this.scale = 1.0
+        this.rotate = 0.0
         this.color = RED
         this.alpha = 1.0
+    }
+
+    abstract draw(ctx: CanvasRenderingContext2D):void;
+}
+
+class TextShape extends Shape {
+    private text: string;
+    constructor() {
+        super();
+        this.text = "FlashBreak"
+    }
+    draw(ctx: CanvasRenderingContext2D) {
+        ctx.fillText(this.text,0,0)
+    }
+}
+class Rect extends Shape {
+    size: Size;
+    constructor() {
+        super()
+        this.size = new Size(50,50)
+    }
+    draw(ctx: CanvasRenderingContext2D) {
+        ctx.fillRect(0,0,this.size.w,this.size.h)
     }
 }
 
@@ -106,12 +131,12 @@ const twerp = new Twerp()
 type Example = {
     title:string,
     canvas:HTMLCanvasElement,
-    rects:Rect[],
+    shapes:Shape[],
 }
 
 function make_canvas() {
     let canvas = document.createElement('canvas')
-    canvas.width = 600
+    canvas.width = 500
     canvas.height = 100
     document.body.appendChild(canvas)
     return canvas
@@ -124,13 +149,13 @@ function make_example_1():Example {
     twerp.tween(rect1.position,{
         prop:'x',
         from:0,
-        to:500,
+        to:400,
         over:2,
     })
      return {
-        title:'x 0 -> 500',
+        title:'x 0 -> 400',
         canvas: make_canvas(),
-        rects: [rect1],
+        shapes: [rect1],
     }
 }
 function make_example_2():Example {
@@ -139,12 +164,12 @@ function make_example_2():Example {
     twerp.tween(rect2,{
         prop:'position',
         from:new Point(0,0),
-        to:new Point(500,50),
+        to:new Point(400,50),
         over:2,
     })
     return {
-        title:'postion 0,0 -> 500,50',
-        rects:[rect2],
+        title:'position 0,0 -> 400,50',
+        shapes:[rect2],
         canvas:make_canvas()
     }
 
@@ -160,7 +185,7 @@ function make_example_3():Example {
     })
     return {
         title:'color RED -> BLUE',
-        rects:[rect3],
+        shapes:[rect3],
         canvas:make_canvas()
     }
 }
@@ -173,18 +198,17 @@ function make_example_4():Example {
             "color":RED,
         },
         to: {
-            "position":new Point(500,50),
+            "position":new Point(400,50),
             "color":BLUE
         },
         over:2,
     })
     return {
         title:'tween position and color together',
-        rects:[rect],
+        shapes:[rect],
         canvas:make_canvas()
     }
 }
-
 function make_example_5():Example {
     //Spread to create objects over one or two dimensions
     let rects = range(10).map(i => new Rect())
@@ -200,8 +224,38 @@ function make_example_5():Example {
     })
     return {
         title:'spread 5 rects position and color',
-        rects:rects,
+        shapes:rects,
         canvas:make_canvas(),
+    }
+}
+function make_example_6():Example {
+    let shape = new TextShape()
+    shape.position = new Point(200,50)
+    twerp.tween(shape,{
+        from:{
+            "scale":0.5,
+            "rotate":0,
+            // "alpha":1.0,
+        },
+        to: {
+            "scale":1.5,
+            "rotate":Math.PI*2,
+            // "alpha":0.0
+        },
+        over:2,
+    })
+    return {
+        title:'shrink and grow and rotate text',
+        shapes:[shape],
+        canvas:make_canvas(),
+    }
+}
+function make_example_7():Example {
+    let rect = new Rect()
+    return {
+        title:'fill rect with animated gradient',
+        shapes:[rect],
+        canvas:make_canvas()
     }
 }
 
@@ -217,6 +271,8 @@ export class AnimExample implements TickClient {
         this.examples.push(make_example_3())
         this.examples.push(make_example_4())
         this.examples.push(make_example_5())
+        this.examples.push(make_example_6())
+        this.examples.push(make_example_7())
 
         this.runner = new RequestAnimGameRunner(1)
         this.runner.start(this)
@@ -227,9 +283,15 @@ export class AnimExample implements TickClient {
             let ctx = ex.canvas.getContext('2d')
             ctx.fillStyle = 'white'
             ctx.fillRect(0,0,ex.canvas.width,ex.canvas.height)
-            ex.rects.forEach(rect => {
-                ctx.fillStyle = rect.color.toCSSString()
-                ctx.fillRect(rect.position.x,rect.position.y,rect.size.w,rect.size.h)
+            ex.shapes.forEach(shape => {
+                ctx.save()
+                ctx.translate(shape.position.x,shape.position.y)
+                ctx.scale(shape.scale,shape.scale)
+                ctx.rotate(shape.rotate)
+                ctx.globalAlpha = shape.alpha
+                ctx.fillStyle = shape.color.toCSSString()
+                shape.draw(ctx)
+                ctx.restore()
             })
             ctx.fillStyle = 'black'
             ctx.font = '16px sans-serif'
