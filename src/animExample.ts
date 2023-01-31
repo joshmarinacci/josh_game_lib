@@ -124,8 +124,14 @@ class Twerp {
         this.anims.forEach(anim => anim.update(time))
     }
 
-    tween(target: any, opts: AnimProps) {
-        this.anims.push(new TwerpAnim(target,opts))
+    tween(target: any, opts: AnimProps):Promise<TwerpAnim> {
+        return new Promise((res,rej)=>{
+            let twerp = new TwerpAnim(target,opts)
+            this.anims.push(twerp)
+            setTimeout(()=>{
+                res(twerp)
+            },opts.over*1000)
+        })
     }
 
     spread(rects: Rect[], opt: SpreadProps) {
@@ -141,6 +147,7 @@ type Example = {
     title:string,
     canvas:HTMLCanvasElement,
     shapes:Shape[],
+    fun?:any
 }
 
 function make_canvas() {
@@ -290,6 +297,34 @@ function make_example_7():Example {
         canvas:make_canvas()
     }
 }
+function make_example_8():Example {
+    let rect = new Rect()
+    const seq = async () => {
+        await twerp.tween(rect,{
+            prop:"position",
+            from:new Point(0,0),
+            to:new Point(100,0),
+            over:0.5,
+        })
+        await twerp.tween(rect,{
+            prop:'position',
+            from:new Point(100,0),
+            to:new Point(100,150),
+            over:1.0,
+        })
+        await twerp.tween(rect,{prop:'color',from:RED,to:GREEN, over:1.0})
+        while(true) {
+            await twerp.tween(rect,{prop:'scale',from:1.0,to:3.0,over:1.0})
+            await twerp.tween(rect,{prop:'scale',from:3.0,to:1.0,over:1.0})
+        }
+    }
+    seq()
+    return {
+        title:'await sequence and infinite loop',
+        shapes:[rect],
+        canvas:make_canvas(),
+    }
+}
 
 export class AnimExample implements TickClient {
     private runner: RequestAnimGameRunner;
@@ -305,6 +340,7 @@ export class AnimExample implements TickClient {
         this.examples.push(make_example_5())
         this.examples.push(make_example_6())
         this.examples.push(make_example_7())
+        this.examples.push(make_example_8())
 
         this.runner = new RequestAnimGameRunner(1)
         this.runner.start(this)
