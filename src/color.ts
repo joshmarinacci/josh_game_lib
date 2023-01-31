@@ -1,4 +1,4 @@
-import {lerp_number} from "./math.js";
+import {lerp_number, Point} from "./math.js";
 
 export class RGB {
     r: number
@@ -52,3 +52,40 @@ export const BLACK: RGB = new RGB(0,0,0)
 export const WHITE: RGB = new RGB(1,1,1)
 export const VIOLET: RGB = new RGB(0.3,0,0.8)
 export const YELLOW: RGB = new RGB(1,0.8,0.1)
+type ColorStop = {
+    position: number,
+    color: RGB,
+}
+
+export class LinearGradientFill {
+    start: Point;
+    end: Point;
+    stops: ColorStop[];
+
+    constructor(start: Point, end: Point) {
+        this.start = start
+        this.end = end
+        this.stops = []
+    }
+
+    addColorStop(number: number, RED: RGB) {
+        this.stops.push({position: number, color: RED})
+    }
+
+    lerp(t: number, that: LinearGradientFill): LinearGradientFill {
+        if (this.stops.length !== that.stops.length) throw new Error("cannot lerp different lengths of linear gradient fills")
+        let grad = new LinearGradientFill(
+            this.start.lerp(t, that.start),
+            this.end.lerp(t, that.end),
+        )
+        grad.stops = this.stops.map((stop, i) => this._lerp_stop(t, stop, that.stops[i]))
+        return grad
+    }
+
+    private _lerp_stop(t: number, a: ColorStop, b: ColorStop): ColorStop {
+        return {
+            position: lerp_number(t, a.position, b.position),
+            color: a.color.lerp(t, b.color)
+        }
+    }
+}

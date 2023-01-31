@@ -1,5 +1,5 @@
 import {lerp_number, Point, range, Size} from "./math.js";
-import {BLACK, BLUE, GREEN, RED, RGB} from "./color.js";
+import {BLACK, BLUE, GREEN, LinearGradientFill, RED, RGB} from "./color.js";
 import {RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 
 abstract class Shape {
@@ -34,7 +34,7 @@ class Rect extends Shape {
     fill: LinearGradientFill|undefined;
     constructor() {
         super()
-        this.size = new Size(50,50)
+        this.size = new Size(25,25)
     }
     draw(ctx: CanvasRenderingContext2D) {
         if(this.fill !== undefined) {
@@ -145,75 +145,80 @@ type Example = {
 
 function make_canvas() {
     let canvas = document.createElement('canvas')
-    canvas.width = 500
-    canvas.height = 100
+    canvas.style.width = '150px'
+    canvas.width = 300
+    canvas.height = 300
     document.body.appendChild(canvas)
     return canvas
 
 }
 function make_example_1():Example {
     //example 1:  animate from left to right over 5 seconds. that's it.
-    let rect1 = new Rect()
-    rect1.position.y = 25
-    twerp.tween(rect1.position,{
+    let rect = new Rect()
+    rect.size = new Size(25,25)
+    rect.position = new Point(25,25)
+    twerp.tween(rect.position,{
         prop:'x',
-        from:0,
-        to:400,
-        over:2,
+        from:50,
+        to:250,
+        over:1,
     })
      return {
-        title:'x 0 -> 400',
+        title:'x 50 -> 250 over 1 second',
         canvas: make_canvas(),
-        shapes: [rect1],
+        shapes: [rect],
     }
 }
 function make_example_2():Example {
     //example 2: animate left to right and top to bottom over 2 seconds.
-    let rect2 = new Rect()
-    twerp.tween(rect2,{
+    let rect = new Rect()
+    rect.size = new Size(25,25)
+    twerp.tween(rect,{
         prop:'position',
         from:new Point(0,0),
-        to:new Point(400,50),
-        over:2,
+        to:new Point(250,250),
+        over:1,
     })
     return {
-        title:'position 0,0 -> 400,50',
-        shapes:[rect2],
+        title:'position 0,0 -> 250,250. 1s',
+        shapes:[rect],
         canvas:make_canvas()
     }
 
 }
 function make_example_3():Example {
     //example 3: animate color from red to blue over 2 seconds
-    let rect3 = new Rect()
-    twerp.tween(rect3,{
+    let rect = new Rect()
+    rect.size = new Size(150,150)
+    twerp.tween(rect,{
         prop:'color',
         from:RED,
         to:BLUE,
-        over:2,
+        over:1,
     })
     return {
-        title:'color RED -> BLUE',
-        shapes:[rect3],
+        title:'color RED -> BLUE, 1s',
+        shapes:[rect],
         canvas:make_canvas()
     }
 }
 function make_example_4():Example {
     // move rect and change color at the same time
     let rect = new Rect()
+    rect.size.set(50,50)
     twerp.tween(rect,{
         from:{
             "position":new Point(0,0),
             "color":RED,
         },
         to: {
-            "position":new Point(400,50),
+            "position":new Point(250,250),
             "color":BLUE
         },
         over:2,
     })
     return {
-        title:'tween position and color together',
+        title:'position & color, 2s',
         shapes:[rect],
         canvas:make_canvas()
     }
@@ -224,7 +229,7 @@ function make_example_5():Example {
     twerp.spread(rects,{
         prop:'position',
         from: new Point(0,0),
-        to: new Point(500,0),
+        to: new Point(280,0),
     })
     twerp.spread(rects,{
         prop:'color',
@@ -232,14 +237,14 @@ function make_example_5():Example {
         to:BLUE,
     })
     return {
-        title:'spread 5 rects position and color',
+        title:'spread 10 rects position and color',
         shapes:rects,
         canvas:make_canvas(),
     }
 }
 function make_example_6():Example {
     let shape = new TextShape()
-    shape.position = new Point(200,50)
+    shape.position = new Point(100,150)
     twerp.tween(shape,{
         from:{
             "scale":0.5,
@@ -251,53 +256,18 @@ function make_example_6():Example {
             "rotate":Math.PI*2,
             // "alpha":0.0
         },
-        over:2,
+        over:3,
     })
     return {
-        title:'shrink and grow and rotate text',
+        title:'scale, rotate, 3s',
         shapes:[shape],
         canvas:make_canvas(),
     }
 }
-
-type ColorStop = {
-    position:number,
-    color:RGB,
-}
-class LinearGradientFill {
-    start: Point;
-    end: Point;
-    stops: ColorStop[];
-    constructor(start:Point, end:Point) {
-        this.start = start
-        this.end = end
-        this.stops = []
-    }
-
-    addColorStop(number: number, RED: RGB) {
-        this.stops.push({position:number,color:RED})
-    }
-    lerp(t:number, that:LinearGradientFill):LinearGradientFill {
-        if(this.stops.length !== that.stops.length) throw new Error("cannot lerp different lengths of linear gradient fills")
-        let grad = new LinearGradientFill(
-            this.start.lerp(t,that.start),
-            this.end.lerp(t,that.end),
-        )
-        grad.stops = this.stops.map((stop,i) => this._lerp_stop(t, stop, that.stops[i]))
-        return grad
-    }
-
-    private _lerp_stop(t: number, a: ColorStop, b: ColorStop):ColorStop {
-        return {
-            position:lerp_number(t,a.position,b.position),
-            color:a.color.lerp(t,b.color)
-        }
-    }
-}
-
 function make_example_7():Example {
     let rect = new Rect()
-    rect.size.set(300,50)
+    rect.position = new Point(0,100)
+    rect.size.set(300,100)
     let grad1 = new LinearGradientFill(new Point(100,0,),new Point(200,0))
     grad1.addColorStop(0.0,RED)
     grad1.addColorStop(1.0,GREEN)
