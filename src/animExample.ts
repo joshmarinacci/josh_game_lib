@@ -1,5 +1,5 @@
 import {lerp_number, Point, range, Size} from "./math.js";
-import {BLUE, GREEN, RED, RGB} from "./color.js";
+import {BLACK, BLUE, GREEN, RED, RGB} from "./color.js";
 import {RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 
 abstract class Shape {
@@ -31,11 +31,20 @@ class TextShape extends Shape {
 }
 class Rect extends Shape {
     size: Size;
+    fill: LinearGradientFill|undefined;
     constructor() {
         super()
         this.size = new Size(50,50)
     }
     draw(ctx: CanvasRenderingContext2D) {
+        if(this.fill !== undefined) {
+            let fill:LinearGradientFill = this.fill
+            let grad = ctx.createLinearGradient(fill.start.x,fill.start.y,fill.end.x,fill.end.y)
+            fill.stops.forEach(stop => {
+                grad.addColorStop(stop.position,stop.color.toCSSString())
+            })
+            ctx.fillStyle = grad
+        }
         ctx.fillRect(0,0,this.size.w,this.size.h)
     }
 }
@@ -98,11 +107,11 @@ class TwerpAnim {
 
 }
 function lerp_any(t: number, from: any, to: any):any {
+    if(typeof from === "number") return lerp_number(t,from,to)
     if(typeof from.lerp === 'function') {
         return from.lerp(t,to)
-    } else {
-        return lerp_number(t, from, to)
     }
+    console.warn("cannot lerp",from)
 }
 
 class Twerp {
@@ -250,8 +259,61 @@ function make_example_6():Example {
         canvas:make_canvas(),
     }
 }
+
+type ColorStop = {
+    position:number,
+    color:RGB,
+}
+class LinearGradientFill {
+    start: Point;
+    end: Point;
+    stops: ColorStop[];
+    constructor(start:Point, end:Point) {
+        this.start = start
+        this.end = end
+        this.stops = []
+    }
+
+    addColorStop(number: number, RED: RGB) {
+        this.stops.push({position:number,color:RED})
+    }
+    lerp(t:number, that:LinearGradientFill):LinearGradientFill {
+        if(this.stops.length !== that.stops.length) throw new Error("cannot lerp different lengths of linear gradient fills")
+        let grad = new LinearGradientFill(
+            this.start.lerp(t,that.start),
+            this.end.lerp(t,that.end),
+        )
+        grad.stops = this.stops.map((stop,i) => this._lerp_stop(t, stop, that.stops[i]))
+        return grad
+    }
+
+    private _lerp_stop(t: number, a: ColorStop, b: ColorStop):ColorStop {
+        return {
+            position:lerp_number(t,a.position,b.position),
+            color:a.color.lerp(t,b.color)
+        }
+    }
+}
+
 function make_example_7():Example {
     let rect = new Rect()
+    rect.size.set(300,50)
+    let grad1 = new LinearGradientFill(new Point(100,0,),new Point(200,0))
+    grad1.addColorStop(0.0,RED)
+    grad1.addColorStop(1.0,GREEN)
+    rect.fill = grad1
+    let grad2 = new LinearGradientFill(new Point(0,0,),new Point(300,0))
+    grad2.addColorStop(0.0,BLACK)
+    grad2.addColorStop(1.0,BLACK)
+    twerp.tween(rect,{
+        from:{
+            "fill":grad1,
+        },
+        to: {
+            "fill":grad2
+        },
+        over:2,
+    })
     return {
         title:'fill rect with animated gradient',
         shapes:[rect],

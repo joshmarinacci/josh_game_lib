@@ -51,9 +51,14 @@ export class Point {
     }
 }
 export class Size {
-    readonly w: number;
-    readonly h: number;
+    w: number;
+    h: number;
     constructor(w:number, h:number) {
+        this.w = w
+        this.h = h
+    }
+
+    set(w: number, h: number) {
         this.w = w
         this.h = h
     }
