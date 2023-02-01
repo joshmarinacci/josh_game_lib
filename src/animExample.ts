@@ -1,5 +1,5 @@
 import {lerp_number, Point, range, Size} from "./math.js";
-import {BLACK, BLUE, GREEN, LinearGradientFill, RED, RGB} from "./color.js";
+import {BLACK, BLUE, GREEN, LinearGradientFill, RED, RGB, WHITE} from "./color.js";
 import {RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 
 abstract class Shape {
@@ -19,31 +19,45 @@ abstract class Shape {
     abstract draw(ctx: CanvasRenderingContext2D):void;
 }
 
+function gradientToCanvas(fill:LinearGradientFill, ctx:CanvasRenderingContext2D) {
+    let grad = ctx.createLinearGradient(fill.start.x,fill.start.y,fill.end.x,fill.end.y)
+    fill.stops.forEach(stop => {
+        grad.addColorStop(stop.position,stop.color.toCSSString())
+    })
+    return grad
+}
+
 class TextShape extends Shape {
     private text: string;
-    constructor() {
+    fontSize: string;
+    fontFamily: string;
+    weight: string;
+    fill?: LinearGradientFill;
+    constructor(text:string) {
         super();
-        this.text = "FlashBreak"
+        this.text = text
+        this.fontSize = '16px'
+        this.fontFamily = 'sans-serif'
+        this.weight = 'normal'
     }
     draw(ctx: CanvasRenderingContext2D) {
+        ctx.font = `${this.weight} ${this.fontSize} ${this.fontFamily}`
+        if(this.fill !== undefined) {
+            ctx.fillStyle = gradientToCanvas(this.fill,ctx)
+        }
         ctx.fillText(this.text,0,0)
     }
 }
 class Rect extends Shape {
     size: Size;
-    fill: LinearGradientFill|undefined;
+    fill?: LinearGradientFill;
     constructor() {
         super()
         this.size = new Size(25,25)
     }
     draw(ctx: CanvasRenderingContext2D) {
         if(this.fill !== undefined) {
-            let fill:LinearGradientFill = this.fill
-            let grad = ctx.createLinearGradient(fill.start.x,fill.start.y,fill.end.x,fill.end.y)
-            fill.stops.forEach(stop => {
-                grad.addColorStop(stop.position,stop.color.toCSSString())
-            })
-            ctx.fillStyle = grad
+            ctx.fillStyle = gradientToCanvas(this.fill,ctx)
         }
         ctx.fillRect(0,0,this.size.w,this.size.h)
     }
@@ -147,7 +161,6 @@ type Example = {
     title:string,
     canvas:HTMLCanvasElement,
     shapes:Shape[],
-    fun?:any
 }
 
 function make_canvas() {
@@ -250,7 +263,7 @@ function make_example_5():Example {
     }
 }
 function make_example_6():Example {
-    let shape = new TextShape()
+    let shape = new TextShape("mow")
     shape.position = new Point(100,150)
     twerp.tween(shape,{
         from:{
@@ -325,6 +338,50 @@ function make_example_8():Example {
         canvas:make_canvas(),
     }
 }
+function make_example_9() {
+    let rect = new Rect()
+    rect.position = new Point(50,150)
+    rect.size = new Size(100,100)
+    rect.color = WHITE
+    const seq = async () => {
+        // sleep for 1 second
+        await twerp.tween(rect, {prop:"",from:0,to:0,over:1})
+        //quick to black
+        await twerp.tween(rect,{prop:'color',from:WHITE,to:BLACK, over:0.5})
+        //quick to white
+        await twerp.tween(rect,{prop:'color',from:BLACK,to:WHITE, over:0.25})
+
+        await twerp.tween(rect, {prop:"",from:0,to:0,over:0.5})
+
+        //horizontal gradient of black on white slides down
+        let grad1 = new LinearGradientFill(new Point(50,0),new Point(50,100))
+        grad1.addColorStop(0.0,WHITE)
+        grad1.addColorStop(0.49,WHITE)
+        grad1.addColorStop(0.5,BLACK)
+        grad1.addColorStop(0.51,WHITE)
+        grad1.addColorStop(1.0,WHITE)
+        let grad2 = new LinearGradientFill(new Point(50,0),new Point(50,100))
+        grad2.addColorStop(0.0,WHITE)
+        grad2.addColorStop(0.1,WHITE)
+        grad2.addColorStop(0.5,BLACK)
+        grad2.addColorStop(0.8,WHITE)
+        grad2.addColorStop(1.0,WHITE)
+        await twerp.tween(rect,{ prop:"fill",from:grad1, to:grad2, over:4 })
+        let grad3 = new LinearGradientFill(new Point(50,100), new Point(50,0))
+        grad3.addColorStop(0.0,WHITE)
+        grad3.addColorStop(0.1,WHITE)
+        grad3.addColorStop(0.5,WHITE)
+        grad3.addColorStop(0.8,WHITE)
+        grad3.addColorStop(1.0,WHITE)
+        await twerp.tween(rect,{ prop:"fill",from:grad2, to:grad3, over:1 })
+    }
+    seq()
+    return {
+        title:'large gradient text',
+        shapes:[rect],
+        canvas:make_canvas(),
+    }
+}
 
 export class AnimExample implements TickClient {
     private runner: RequestAnimGameRunner;
@@ -341,6 +398,7 @@ export class AnimExample implements TickClient {
         this.examples.push(make_example_6())
         this.examples.push(make_example_7())
         this.examples.push(make_example_8())
+        this.examples.push(make_example_9())
 
         this.runner = new RequestAnimGameRunner(1)
         this.runner.start(this)
