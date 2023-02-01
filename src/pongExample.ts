@@ -84,6 +84,8 @@ const DEBUG = {
     GRID:false,
     METRICS: false,
     PARTICLES: true,
+    SOUND_EFFECTS:false,
+    MUSIC:false,
 }
 const SCREEN = new Size(200,200)
 const SCALE = 3
@@ -167,6 +169,10 @@ const LEVELS = [
 ]
 
 
+function play_effect(thunk: any) {
+    if(DEBUG.SOUND_EFFECTS) thunk.play()
+}
+
 export class PongExample implements TickClient {
     private canvas: HTMLCanvasElement
     private ball: Ball
@@ -244,13 +250,13 @@ export class PongExample implements TickClient {
             //reflect velocity vector
             this.ball.velocity = this.ball.velocity.multiply(r3.reflection)
             this.ball.fader.start()
-            thunk.play()
+            play_effect(thunk)
         }
         this.blocks.forEach(bumper => {
             let blk = bumper.bounds
             let r = check_collision_block(this.ball.bounds, blk, velocity)
             if(r.collided) {
-                shink.play()
+                play_effect(shink)
                 //new bounds based on the fraction of velocity before hit the barrier
                 new_bounds = this.ball.bounds.add(velocity.scale(r.tvalue))
                 //reflect velocity
@@ -273,7 +279,7 @@ export class PongExample implements TickClient {
                 position:this.ball.bounds.center(),
                 color: new RGB(252/255, 147/255, 230/255),
             }))
-            punch.play()
+            play_effect(punch)
         }
         this.ball.bounds = new_bounds
 
