@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "jsfxr": "^1.2.0",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "josh_js_util": "^0.1.4"
   },
   "author": "",
   "license": "ISC"

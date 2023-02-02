@@ -11,12 +11,13 @@ level 3: 9 x 7 red heart, 70pps
 111116JF2KzyFRG2qu7K9JejxwSqeeqc6p3PdyvDLdNR3X67xiPLegK1pEcrv38Z6pGRHnkujHfbKAznPcJ7WN7XmfBhh7X12sCyPrGyuye75YHMGhxZ6Ghm
 
  */
+import {ArrayGrid} from "josh_js_util"
 import {Bounds, lerp_rgb, Point, rand, Size} from "./math.js";
 import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 import {check_collision_block} from "./physics.js";
-import {Cell, check_collision_grid, Grid} from "./grid.js";
+import {Cell, check_collision_grid,  Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
-import {Fader, ParticleEffect, Wiggle} from "./effects.js";
+import {Fader, Particle, ParticleEffect, Wiggle} from "./effects.js";
 import {
     BLACK,
     BLUE,
@@ -113,7 +114,7 @@ const twerp = new Twerp()
 
 function init_gradient():Level {
     let grid = new Grid(10,5, 14)
-    grid.forEach((cell: Cell, index:Point) => {
+    grid.forEach((cell: Cell, index) => {
         cell.value = 1
         cell.color = lerp_rgb(RED,YELLOW,index.y/4)
         cell.border = darken(cell.color)
@@ -126,7 +127,7 @@ function init_gradient():Level {
 }
 function init_checkerboard():Level {
     let grid = new Grid(10,8, 14)
-    grid.forEach((cell: Cell, index:Point) => {
+    grid.forEach((cell: Cell, index) => {
         if((index.x + index.y) % 2 === 0) {
             cell.value = 1
             cell.color = RED
@@ -154,22 +155,14 @@ function init_heart():Level {
     ..XXXXX..
     ...XXX...
     `
-    let lines =  pattern.trim().split('\n')
-    let y = 0
-    for(let line of lines) {
-        line = line.trim()
-        let x = 0
-        for(let ch of line) {
-            let cell = grid.get_cell(x,y)
-            if(ch === '.') {
-                cell.value = 0
-            } else {
-                cell.value = 1
-            }
-            x++
+    let data = ArrayGrid.fromPattern<Cell>(pattern,(ch:string,index)=> {
+        return {
+            value: ch==='.'?0:1,
+            border:darken(RED),
+            color:RED
         }
-        y++
-    }
+    })
+    data.forEach((c,i)=>grid.set_at(i.x,i.y,c))
     return {
         velocity: new Point(70,-70),
         grid: grid
@@ -195,7 +188,7 @@ export class PongExample implements TickClient {
     private game_runner: GameRunner;
     private paddle: Paddle;
     private keyboard: KeyboardSystem;
-    private particles: ParticleEffect[];
+    private particles: ParticleEffect<any>[];
     private levels: Level[];
     private levelIndex: number;
     private level: Level;
@@ -393,71 +386,64 @@ export class PongExample implements TickClient {
         let num = this.levelIndex+1
         let delay = 0.8
         let anim = 0.4
-        let lookup = {
-            1:[ [0,0],[2,0],
-                [0,1],[2,1],
-                [0,2],[2,2],
-                [0,3],[2,3],
-                [0,4],[2,4],
-            ],
-            2:[
-                [0,1],[1,1],
-                [1,3],[2,3],
-            ]
+        interface PartCell extends Particle {
+            visible:boolean
+            offset: Point,
+            scale: number,
         }
-        this.particles.push(new ParticleEffect({
+
+        let one_pattern = `
+          .X.
+          xX.
+          .X.
+          .X.
+          XXX
+        `
+        let data = ArrayGrid.fromPattern<PartCell>(one_pattern,(ch,index)=>{
+            let part:PartCell = {
+                size: 15,
+                age: 0,
+                position : new Point((index.x-1)*18,(index.y-2)*18),
+                velocity: new Point(1,1),
+                alpha: 1.0,
+                visible:true,
+                offset: new Point(0,0),
+                scale: 1.0,
+                color: WHITE,
+            }
+            part.velocity = part.position.scale(2)
+            if(ch === '.') {
+                part.visible = false
+            }
+            return part
+        })
+
+
+        this.particles.push(new ParticleEffect<PartCell>({
             delay: delay,
             count: 3*5,
             color: GREEN,
             maxLifetime: 4.0,
             init:(effect) => {
-                effect.particles.forEach((p,i) => {
-                    let x = i % 3
-                    let y = Math.floor(i/3)
-                    p.size = 15
-                    p.position = new Point((x-1)*18,(y-2)*18)
-                    p.velocity = p.position.scale(3.0)
-                    p.alpha = 1.0
-                    // @ts-ignore
-                    p.visible = true
-                    // @ts-ignore
-                    p.offset = new Point(0,0)
-                    // @ts-ignore
-                    p.scale = 1.0
-                    p.color = new RGB(1.0,1.0,1.0)
-                    if(lookup[num]) {
-                        lookup[num].forEach(xy => {
-                            if(x == xy[0] && y == xy[1]) {
-                                // @ts-ignore
-                                p.visible = false
-                            }
-                        })
-                    }
-                })
+                data.forEach((cell, xy) => effect.particles.push(cell))
             },
-            update:(time, effect:ParticleEffect) => {
+            update:(time, effect:ParticleEffect<PartCell>) => {
                 effect.particles.forEach(part => {
                     part.age += time.delta
-                    // @ts-ignore
                     part.offset = new Point(rand(-1,1),0)
                     if(part.age >= delay) {
                         part.position = part.position.add(part.velocity.scale(time.delta))
-                        // @ts-ignore
                         part.scale = (part.age-delay) + 1.0
                         part.alpha = 1.0 - (part.age-delay)/anim
                         if(part.alpha > 1.0) part.alpha = 1.0
                     }
                 })
-
             },
             draw: (time,ctx,effect) => {
                 effect.particles.forEach(part => {
-                    // @ts-ignore
                     if(!part.visible) return
                     ctx.save()
-                    // @ts-ignore
                     ctx.scale(part.scale,part.scale)
-                    // @ts-ignore
                     let pt = part.position.add(part.offset)
                     ctx.fillStyle = rgb_to_string_with_alpha(part.color, part.alpha)
                     ctx.fillRect(pt.x, pt.y, part.size, part.size)

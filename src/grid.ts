@@ -1,6 +1,7 @@
 import {Bounds, Point} from "./math.js";
 import {check_collision_block, CollisionResult} from "./physics.js";
 import {darken, RED, RGB, rgb_to_string} from "./color.js";
+import {ArrayGrid} from "josh_js_util";
 
 export type Cell = {
     value: number
@@ -8,41 +9,32 @@ export type Cell = {
     border: RGB
 }
 
-export class Grid {
-    private w: number;
-    private h: number;
-    private cells: Cell[];
-    size: number;
+export class Grid extends ArrayGrid<Cell> {
+    draw_size: number;
     position: Point;
-
-    constructor(w: number, h: number, size:number) {
-        this.w = w
-        this.h = h
-        this.size = size
-        this.cells = []
-        for (let j = 0; j < this.h; j++) {
-            for (let i = 0; i < this.w; i++) {
-                this.cells.push({
-                    value: 0,
-                    color: RED,
-                    border: darken(RED)
-                })
+    constructor(w:number, h:number, size:number) {
+        super(w,h)
+        this.draw_size = size
+        this.position = new Point(0,0)
+        this.fill((xy) => {
+            return {
+                value: 0,
+                color: RED,
+                border: darken(RED)
             }
-        }
-
+        });
     }
-
     draw(ctx: CanvasRenderingContext2D) {
         ctx.save()
         ctx.translate(this.position.x, this.position.y)
         for (let j = 0; j < this.h; j++) {
             for (let i = 0; i < this.w; i++) {
-                let cell = this.get_cell(i, j)
+                let cell = this.get_at(i, j)
                 if(cell.value === 0) continue
-                let x = i * this.size
-                let y = j * this.size
-                let ww = this.size - 2
-                let hh = this.size - 2
+                let x = i * this.draw_size
+                let y = j * this.draw_size
+                let ww = this.draw_size - 2
+                let hh = this.draw_size - 2
                 ctx.fillStyle = rgb_to_string(cell.color)
                 ctx.fillRect(x,y,ww,hh)
                 ctx.strokeStyle = rgb_to_string(cell.border)
@@ -52,36 +44,16 @@ export class Grid {
         }
         ctx.restore()
     }
-
-
-    get_cell(x: number, y: number): Cell {
-        if (x < 0) return undefined
-        if (y < 0) return undefined
-        if (x >= this.w) return undefined
-        if (y >= this.h) return undefined
-        let n = y * this.w + x
-        return this.cells[n]
-    }
-
     get_cell_bounds(x: number, y: number): Bounds {
-        return new Bounds(x * this.size, y * this.size, this.size, this.size).add(this.position)
+        return new Bounds(x * this.draw_size, y * this.draw_size, this.size, this.size).add(this.position)
     }
 
     public self_bounds() {
         return new Bounds(this.position.x, this.position.y, this.w * 40, this.h * 40)
     }
-
-    forEach(cb: CellCallback) {
-        for (let j = 0; j < this.h; j++) {
-            for (let i = 0; i < this.w; i++) {
-                let cell = this.get_cell(i,j)
-                cb(cell, new Point(i,j))
-            }
-        }
-    }
 }
 
-type CellCallback = (cell:Cell, coords:Point) => void
+type CellCallback<C> = (cell:C, coords:Point) => void
 
 export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): CollisionResult {
     let bounds = grid.self_bounds()
@@ -94,8 +66,8 @@ export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): Co
 
 //
     function check_collision_grid_corner(grid: Grid, corner: Point) {
-        let cell_coords = corner.subtract(grid.position).scale(1 / grid.size).floor()
-        let cell = grid.get_cell(cell_coords.x, cell_coords.y)
+        let cell_coords = corner.subtract(grid.position).scale(1 / grid.draw_size).floor()
+        let cell = grid.get_at(cell_coords.x, cell_coords.y)
         if (cell) {
             if (cell.value == 0) return {collided: false}
             if (cell.value == 1) {
@@ -123,3 +95,6 @@ export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): Co
         collided: false,
     }
 }
+
+
+type CellCallback2<C> = (ch:string, coords:Point) => C

@@ -2,7 +2,7 @@ import {Bounds, lerp_rgb, Point, rand} from "./math.js";
 import {Seconds, TimeInfo, TValue} from "./time.js";
 import {RGB, rgb_to_string, rgb_to_string_with_alpha} from "./color.js";
 
-export type Particle = {
+export interface Particle {
     position: Point
     velocity: Point
     size: number
@@ -11,46 +11,34 @@ export type Particle = {
     age: number
 }
 
-export type ParticleEffectParams = {
+export type ParticleEffectParams<P extends Particle> = {
     position:Point
     color:RGB,
     count:number,
     maxLifetime:number,
     delay?:number,
-    init?: (effect: ParticleEffect) => void;
-    update?: (time:TimeInfo, effect: ParticleEffect) => void;
-    draw?: (time:TimeInfo, ctx:CanvasRenderingContext2D, effect: ParticleEffect) => void;
+    init?: (effect: ParticleEffect<P>) => void;
+    update?: (time:TimeInfo, effect: ParticleEffect<P>) => void;
+    draw?: (time:TimeInfo, ctx:CanvasRenderingContext2D, effect: ParticleEffect<P>) => void;
 }
-export class ParticleEffect {
-    particles: Particle[];
+export class ParticleEffect<P extends Particle> {
+    particles: P[];
     private position: Point;
     private start_count: number;
     age: number;
     private maxLifetime: number;
     private delay: number;
-    private draw_cb: (time: TimeInfo, ctx: CanvasRenderingContext2D, effect: ParticleEffect) => void;
-    private update_cb: (time:TimeInfo, effect: ParticleEffect) => void;
+    private draw_cb: (time: TimeInfo, ctx: CanvasRenderingContext2D, effect: ParticleEffect<P>) => void;
+    private update_cb: (time:TimeInfo, effect: ParticleEffect<P>) => void;
 
-    constructor(opts:ParticleEffectParams) {
+    constructor(opts:ParticleEffectParams<P>) {
         this.position = opts.position
         this.start_count = opts.count
         this.particles = []
-        for (let i = 0; i < this.start_count; i++) {
-            this.particles.push({
-                position: opts.position,
-                velocity: new Point(rand(-100, 100), rand(-100, 100)),
-                color: opts.color,
-                size: rand(2, 7),
-                alpha: 1.0,
-                age: 0
-            })
-        }
         this.maxLifetime = opts.maxLifetime
         this.age = 0
         this.delay = opts.delay?opts.delay:0
-        if(opts.init) {
-            opts.init(this)
-        }
+        if(opts.init)  opts.init(this)
         this.draw_cb = opts.draw
         this.update_cb = opts.update
     }
