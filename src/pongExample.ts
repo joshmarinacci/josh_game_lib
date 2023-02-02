@@ -392,14 +392,7 @@ export class PongExample implements TickClient {
             scale: number,
         }
 
-        let one_pattern = `
-          .X.
-          xX.
-          .X.
-          .X.
-          XXX
-        `
-        let data = ArrayGrid.fromPattern<PartCell>(one_pattern,(ch,index)=>{
+        const to_PartCell = (ch:string, index:Point) => {
             let part:PartCell = {
                 size: 15,
                 age: 0,
@@ -416,8 +409,35 @@ export class PongExample implements TickClient {
                 part.visible = false
             }
             return part
-        })
+        }
 
+        let one_pattern = `
+          .X.
+          xX.
+          .X.
+          .X.
+          XXX
+        `
+        let data = ArrayGrid.fromPattern<PartCell>(one_pattern,to_PartCell)
+
+        let two_pattern = `
+        xxx
+        ..x
+        xxx
+        x..
+        xxx
+        `
+        let data2 = ArrayGrid.fromPattern<PartCell>(two_pattern,to_PartCell)
+
+        let three_pattern = `
+        xxx
+        ..x
+        xxx
+        ..x
+        xxx
+        `
+        let data3 = ArrayGrid.fromPattern<PartCell>(three_pattern,to_PartCell)
+        let patterns = [data, data2, data3 ]
 
         this.particles.push(new ParticleEffect<PartCell>({
             delay: delay,
@@ -425,7 +445,7 @@ export class PongExample implements TickClient {
             color: GREEN,
             maxLifetime: 4.0,
             init:(effect) => {
-                data.forEach((cell, xy) => effect.particles.push(cell))
+                if(patterns[num]) patterns[num].forEach((c, xy) => effect.particles.push(c))
             },
             update:(time, effect:ParticleEffect<PartCell>) => {
                 effect.particles.forEach(part => {
