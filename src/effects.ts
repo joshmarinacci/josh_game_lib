@@ -2,57 +2,85 @@ import {Bounds, lerp_rgb, Point, rand} from "./math.js";
 import {Seconds, TimeInfo, TValue} from "./time.js";
 import {RGB, rgb_to_string, rgb_to_string_with_alpha} from "./color.js";
 
-type Particle = {
+export type Particle = {
     position: Point
     velocity: Point
     size: number
-    color:RGB,
+    color:RGB
+    alpha:number
+    age: number
 }
 
 export type ParticleEffectParams = {
     position:Point
     color:RGB,
     count:number,
+    maxLifetime:number,
+    delay?:number,
+    init?: (effect: ParticleEffect) => void;
+    update?: (time:TimeInfo, effect: ParticleEffect) => void;
+    draw?: (time:TimeInfo, ctx:CanvasRenderingContext2D, effect: ParticleEffect) => void;
 }
 export class ParticleEffect {
-    private particles: Particle[];
+    particles: Particle[];
     private position: Point;
     private start_count: number;
-    private age: number;
-    private lifetime: number;
+    age: number;
+    private maxLifetime: number;
+    private delay: number;
+    private draw_cb: (time: TimeInfo, ctx: CanvasRenderingContext2D, effect: ParticleEffect) => void;
+    private update_cb: (time:TimeInfo, effect: ParticleEffect) => void;
 
-    constructor(params:ParticleEffectParams) {
-        this.position = params.position
-        this.start_count = params.count
+    constructor(opts:ParticleEffectParams) {
+        this.position = opts.position
+        this.start_count = opts.count
         this.particles = []
         for (let i = 0; i < this.start_count; i++) {
             this.particles.push({
-                position: params.position,
+                position: opts.position,
                 velocity: new Point(rand(-100, 100), rand(-100, 100)),
-                color: params.color,
-                size: rand(2, 7)
+                color: opts.color,
+                size: rand(2, 7),
+                alpha: 1.0,
+                age: 0
             })
         }
-        this.lifetime = 1.0
+        this.maxLifetime = opts.maxLifetime
         this.age = 0
+        this.delay = opts.delay?opts.delay:0
+        if(opts.init) {
+            opts.init(this)
+        }
+        this.draw_cb = opts.draw
+        this.update_cb = opts.update
     }
 
     update(time: TimeInfo) {
         this.age += time.delta
-        this.particles.forEach(part => part.position = part.position.add(part.velocity.scale(time.delta)))
+        if(this.update_cb) {
+            this.update_cb(time, this)
+        } else {
+            this.particles.forEach(part => part.position = part.position.add(part.velocity.scale(time.delta)))
+        }
     }
 
     draw(time: TimeInfo, ctx: CanvasRenderingContext2D) {
-
-        this.particles.forEach(part => {
-            let fade = 1.0 - this.age / this.lifetime
-            ctx.fillStyle = rgb_to_string_with_alpha(part.color,fade)
-            ctx.fillRect(part.position.x, part.position.y, part.size, part.size)
-        })
+        ctx.save()
+        ctx.translate(this.position.x,this.position.y)
+        if(this.draw_cb) {
+            this.draw_cb(time,ctx,this)
+        } else {
+            this.particles.forEach(part => {
+                let fade = 1.0 - this.age / this.maxLifetime
+                ctx.fillStyle = rgb_to_string_with_alpha(part.color, fade)
+                ctx.fillRect(part.position.x, part.position.y, part.size, part.size)
+            })
+        }
+        ctx.restore()
     }
 
     isAlive() {
-        return (this.age < this.lifetime)
+        return (this.age < this.maxLifetime)
     }
 }
 

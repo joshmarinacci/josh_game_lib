@@ -11,13 +11,25 @@ level 3: 9 x 7 red heart, 70pps
 111116JF2KzyFRG2qu7K9JejxwSqeeqc6p3PdyvDLdNR3X67xiPLegK1pEcrv38Z6pGRHnkujHfbKAznPcJ7WN7XmfBhh7X12sCyPrGyuye75YHMGhxZ6Ghm
 
  */
-import {Bounds, lerp_rgb, Point, Size} from "./math.js";
+import {Bounds, lerp_rgb, Point, rand, Size} from "./math.js";
 import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid, Grid} from "./grid.js";
 import {KeyboardSystem} from "./keyboard.js";
 import {Fader, ParticleEffect, Wiggle} from "./effects.js";
-import {BLACK, darken, RED, RGB, rgb_to_string, VIOLET, WHITE, YELLOW} from "./color.js";
+import {
+    BLACK,
+    BLUE,
+    darken,
+    GREEN,
+    RED,
+    RGB,
+    rgb_to_string, rgb_to_string_with_alpha,
+    VIOLET,
+    WHITE,
+    YELLOW
+} from "./color.js";
+import {Twerp} from "./anim.js";
 
 // @ts-ignore
 const sfxr = window.sfxr
@@ -84,7 +96,7 @@ const DEBUG = {
     GRID:false,
     METRICS: false,
     PARTICLES: true,
-    SOUND_EFFECTS:false,
+    SOUND_EFFECTS:true,
     MUSIC:false,
 }
 const SCREEN = new Size(200,200)
@@ -96,6 +108,8 @@ type Level = {
     grid:Grid
     velocity:Point
 }
+
+const twerp = new Twerp()
 
 function init_gradient():Level {
     let grid = new Grid(10,5, 14)
@@ -185,6 +199,7 @@ export class PongExample implements TickClient {
     private levels: Level[];
     private levelIndex: number;
     private level: Level;
+    private playing: boolean;
     constructor() {
         this.ball = new Ball()
         this.paddle = new Paddle()
@@ -201,8 +216,8 @@ export class PongExample implements TickClient {
         this.levelIndex = 0
         this.level = this.levels[this.levelIndex]
         this.grid = this.level.grid
-
         this.particles = []
+        this.playing = false
     }
 
     attach(element: Element) {
@@ -213,33 +228,24 @@ export class PongExample implements TickClient {
         })
     }
     tick(time:TimeInfo) {
-        this.update(time)
-        this.check_die(time)
-        this.check_win(time)
+        this.check_input(time)
+        if(this.playing) {
+            this.update_physics(time)
+            this.check_die(time)
+            this.check_win(time)
+        }
+        this.update_particles(time)
         this.draw(time)
     }
     start() {
         this.game_runner = new RequestAnimGameRunner(1)
         // this.game_runner = new SetIntervalTicker(100)
         this.game_runner.start(this)
+        this.playing = false
+        this.start_level_info_display()
     }
 
-    private update(time: TimeInfo) {
-        if(this.keyboard.isPressed('ArrowRight')) {
-            let delta = this.paddle.velocity.scale(1*time.delta)
-            this.paddle.bounds.add_self(delta)
-            if(this.paddle.bounds.right() > SCREEN.w - BORDER_WIDTH) {
-                this.paddle.bounds.set_right(SCREEN.w - BORDER_WIDTH)
-            }
-        }
-        if(this.keyboard.isPressed('ArrowLeft')) {
-            let delta = this.paddle.velocity.scale(-1*time.delta)
-            this.paddle.bounds.add_self(delta)
-            // this.paddle.bounds.add_self(new Point(-3,0))
-            if(this.paddle.bounds.left() < BORDER_WIDTH) {
-                this.paddle.bounds.set_left(BORDER_WIDTH)
-            }
-        }
+    private update_physics(time: TimeInfo) {
         // console.log('delta',time.delta)
         let velocity = this.ball.velocity.scale(time.delta)
         let new_bounds = this.ball.bounds.add(velocity)
@@ -278,13 +284,11 @@ export class PongExample implements TickClient {
                 count: 30,
                 position:this.ball.bounds.center(),
                 color: new RGB(252/255, 147/255, 230/255),
+                maxLifetime: 1
             }))
             play_effect(punch)
         }
         this.ball.bounds = new_bounds
-
-        if(DEBUG.PARTICLES) this.particles.forEach(part => part.update(time))
-        if(DEBUG.PARTICLES) this.particles = this.particles.filter(part => part.isAlive())
     }
 
     private draw(time: TimeInfo) {
@@ -348,17 +352,6 @@ export class PongExample implements TickClient {
 
 
     }
-
-    private stroke_bounds(ctx: CanvasRenderingContext2D, bounds: Bounds, color:string) {
-        ctx.strokeStyle = color
-        ctx.lineWidth = 1
-        ctx.strokeRect(bounds.x, bounds.y, bounds.w-1, bounds.h-1)
-    }
-    private fill_bounds(ctx: CanvasRenderingContext2D, bounds: Bounds, color:string) {
-        ctx.fillStyle = color
-        ctx.fillRect(bounds.x, bounds.y, bounds.w-1, bounds.h-1)
-    }
-
     private check_win(time: TimeInfo) {
         let count = 0
         this.grid.forEach((cell)=>{
@@ -380,12 +373,10 @@ export class PongExample implements TickClient {
             this.reset_ball()
         }
     }
-
     private reset_ball() {
         this.ball.bounds = DEFAULT_BALL_BOUNDS.copy()
         this.ball.velocity = this.level.velocity.copy()
     }
-
     private check_die(time: TimeInfo) {
         if(this.ball.bounds.y > SCREEN.h) {
             console.log("died")
@@ -393,10 +384,114 @@ export class PongExample implements TickClient {
         }
 
     }
-
     private win_game() {
         console.log("you won the game")
         this.game_runner.stop()
+    }
+    private async start_level_info_display() {
+        console.log('starting level',this.level,this.levelIndex)
+        let num = this.levelIndex+1
+        let delay = 0.8
+        let anim = 0.4
+        let lookup = {
+            1:[ [0,0],[2,0],
+                [0,1],[2,1],
+                [0,2],[2,2],
+                [0,3],[2,3],
+                [0,4],[2,4],
+            ],
+            2:[
+                [0,1],[1,1],
+                [1,3],[2,3],
+            ]
+        }
+        this.particles.push(new ParticleEffect({
+            delay: delay,
+            count: 3*5,
+            color: GREEN,
+            maxLifetime: 4.0,
+            init:(effect) => {
+                effect.particles.forEach((p,i) => {
+                    let x = i % 3
+                    let y = Math.floor(i/3)
+                    p.size = 15
+                    p.position = new Point((x-1)*18,(y-2)*18)
+                    p.velocity = p.position.scale(3.0)
+                    p.alpha = 1.0
+                    // @ts-ignore
+                    p.visible = true
+                    // @ts-ignore
+                    p.offset = new Point(0,0)
+                    // @ts-ignore
+                    p.scale = 1.0
+                    p.color = new RGB(1.0,1.0,1.0)
+                    if(lookup[num]) {
+                        lookup[num].forEach(xy => {
+                            if(x == xy[0] && y == xy[1]) {
+                                // @ts-ignore
+                                p.visible = false
+                            }
+                        })
+                    }
+                })
+            },
+            update:(time, effect:ParticleEffect) => {
+                effect.particles.forEach(part => {
+                    part.age += time.delta
+                    // @ts-ignore
+                    part.offset = new Point(rand(-1,1),0)
+                    if(part.age >= delay) {
+                        part.position = part.position.add(part.velocity.scale(time.delta))
+                        // @ts-ignore
+                        part.scale = (part.age-delay) + 1.0
+                        part.alpha = 1.0 - (part.age-delay)/anim
+                        if(part.alpha > 1.0) part.alpha = 1.0
+                    }
+                })
+
+            },
+            draw: (time,ctx,effect) => {
+                effect.particles.forEach(part => {
+                    // @ts-ignore
+                    if(!part.visible) return
+                    ctx.save()
+                    // @ts-ignore
+                    ctx.scale(part.scale,part.scale)
+                    // @ts-ignore
+                    let pt = part.position.add(part.offset)
+                    ctx.fillStyle = rgb_to_string_with_alpha(part.color, part.alpha)
+                    ctx.fillRect(pt.x, pt.y, part.size, part.size)
+                    ctx.strokeStyle = rgb_to_string_with_alpha(darken(part.color), part.alpha)
+                    ctx.lineWidth = 1.0
+                    ctx.strokeRect(pt.x,pt.y,part.size,part.size)
+                    ctx.restore()
+                })
+            },
+            position:new Point(90,70),
+        }))
+        await twerp.tween({}, {prop: "", from: 0, to: 0, over: 1})
+        this.playing = true
+    }
+    private check_input(time: TimeInfo) {
+        if(this.keyboard.isPressed('ArrowRight')) {
+            let delta = this.paddle.velocity.scale(1*time.delta)
+            this.paddle.bounds.add_self(delta)
+            if(this.paddle.bounds.right() > SCREEN.w - BORDER_WIDTH) {
+                this.paddle.bounds.set_right(SCREEN.w - BORDER_WIDTH)
+            }
+        }
+        if(this.keyboard.isPressed('ArrowLeft')) {
+            let delta = this.paddle.velocity.scale(-1*time.delta)
+            this.paddle.bounds.add_self(delta)
+            // this.paddle.bounds.add_self(new Point(-3,0))
+            if(this.paddle.bounds.left() < BORDER_WIDTH) {
+                this.paddle.bounds.set_left(BORDER_WIDTH)
+            }
+        }
+    }
+    private update_particles(time: TimeInfo) {
+        if(DEBUG.PARTICLES) this.particles.forEach(part => part.update(time))
+        if(DEBUG.PARTICLES) this.particles = this.particles.filter(part => part.isAlive())
     }
 }
 
