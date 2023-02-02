@@ -11,8 +11,8 @@ level 3: 9 x 7 red heart, 70pps
 111116JF2KzyFRG2qu7K9JejxwSqeeqc6p3PdyvDLdNR3X67xiPLegK1pEcrv38Z6pGRHnkujHfbKAznPcJ7WN7XmfBhh7X12sCyPrGyuye75YHMGhxZ6Ghm
 
  */
-import {ArrayGrid} from "josh_js_util"
-import {Bounds, lerp_rgb, Point, rand, Size} from "./math.js";
+import {ArrayGrid, Point, rand, Size} from "josh_js_util"
+import {Bounds, lerp_rgb} from "./math.js";
 import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
 import {check_collision_block} from "./physics.js";
 import {Cell, check_collision_grid,  Grid} from "./grid.js";
@@ -368,7 +368,7 @@ export class PongExample implements TickClient {
     }
     private reset_ball() {
         this.ball.bounds = DEFAULT_BALL_BOUNDS.copy()
-        this.ball.velocity = this.level.velocity.copy()
+        this.ball.velocity = this.level.velocity.clone()
     }
     private check_die(time: TimeInfo) {
         if(this.ball.bounds.y > SCREEN.h) {

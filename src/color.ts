@@ -1,4 +1,5 @@
-import {lerp_number, Point} from "./math.js";
+import {Point, lerp_number} from "josh_js_util";
+
 
 export class RGB {
     r: number

@@ -1,6 +1,6 @@
 import {TimeInfo} from "./time.js";
-import {lerp_number} from "./math.js";
 import {Shape} from "./shapes.js";
+import {lerp_number} from "josh_js_util";
 
 type AnimProps = {
     prop?: string

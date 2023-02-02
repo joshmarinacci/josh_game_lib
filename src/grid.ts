@@ -1,7 +1,7 @@
-import {Bounds, Point} from "./math.js";
+import {Bounds} from "./math.js";
 import {check_collision_block, CollisionResult} from "./physics.js";
 import {darken, RED, RGB, rgb_to_string} from "./color.js";
-import {ArrayGrid} from "josh_js_util";
+import {ArrayGrid, Point} from "josh_js_util";
 
 export type Cell = {
     value: number

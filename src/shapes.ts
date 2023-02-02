@@ -1,5 +1,5 @@
 import {RED, RGB} from "./color.js";
-import {Point} from "./math.js";
+import {Point} from "josh_js_util";
 
 export abstract class Shape {
     color: RGB;

@@ -1,81 +1,6 @@
 import {RGB} from "./color.js";
+import {Point, Insets} from "josh_js_util"
 
-export class Point {
-    y: number;
-    x: number;
-    constructor(x: number, y: number) {
-        this.x = x
-        this.y = y
-    }
-    add(pt:Point) {
-        return new Point(this.x+pt.x,this.y+pt.y)
-    }
-    scale(v:number) {
-        return new Point(this.x*v,this.y*v)
-    }
-
-    subtract(pt: Point) {
-        return new Point(this.x-pt.x,this.y-pt.y)
-    }
-    toString() {
-        return `Point(${this.x.toFixed(1)},${this.y.toFixed(1)})`
-    }
-
-    length() {
-        return Math.sqrt(this.x*this.x + this.y*this.y)
-    }
-
-    multiply(point: Point):Point {
-        return new Point(this.x*point.x,this.y*point.y)
-    }
-
-    floor():Point {
-        return new Point(Math.floor(this.x),Math.floor(this.y))
-    }
-
-    clamp(min: Point, max: Point):Point {
-        let x = this.x
-        if(x < min.x) x = min.x
-        if(x > max.x) x = max.x
-        let y = this.y
-        if(y < min.y) y = min.y
-        if(y > max.y) y = max.y
-        return new Point(x,y)
-    }
-
-    copy() {
-        return new Point(this.x,this.y)
-    }
-    lerp(t:number, that:Point):Point {
-        return new Point(lerp_number(t,this.x,that.x),lerp_number(t,this.y,that.y))
-    }
-}
-export class Size {
-    w: number;
-    h: number;
-    constructor(w:number, h:number) {
-        this.w = w
-        this.h = h
-    }
-
-    set(w: number, h: number) {
-        this.w = w
-        this.h = h
-    }
-}
-
-export class Insets {
-    top:number
-    right:number
-    bottom:number
-    left:number
-    constructor(top,right,bottom,left) {
-        this.top = top
-        this.right = right
-        this.bottom = bottom
-        this.left = left
-    }
-}
 export class Bounds {
     x: number;
     y: any;
@@ -173,24 +98,7 @@ export class Bounds {
     }
 }
 
-export function rand(min: number, max: number) {
-    return min + Math.random()*(max-min)
-}
-
-export function lerp_number(t:number, s: number, e: number): number {
-    if (t <= 0) return s
-    if (t >= 1) return e
-    return s + (e - s) * t
-}
-
 export function lerp_rgb(s: RGB, e: RGB, t: number): RGB {
     return s.lerp(t,e)
 }
 
-export function range(count: number): number[] {
-    let list = []
-    for (let i = 0; i < count; i++) {
-        list.push(i)
-    }
-    return list
-}
