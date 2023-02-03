@@ -52,9 +52,6 @@ export class Grid extends ArrayGrid<Cell> {
         return new Bounds(this.position.x, this.position.y, this.w * 40, this.h * 40)
     }
 }
-
-type CellCallback<C> = (cell:C, coords:Point) => void
-
 export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): CollisionResult {
     let bounds = grid.self_bounds()
     let new_ball = old_ball.add(v)
@@ -95,6 +92,3 @@ export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): Co
         collided: false,
     }
 }
-
-
-type CellCallback2<C> = (ch:string, coords:Point) => C
