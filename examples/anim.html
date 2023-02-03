@@ -23,6 +23,20 @@
 
 <script src="../node_modules/jsfxr/riffwave.js"></script>
 <script src="../node_modules/jsfxr/sfxr.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "josh_js_util": "../node_modules/josh_js_util/dist/index.js"
+  }
+}
+</script>
+<script type="module">
+  if (HTMLScriptElement.supports && HTMLScriptElement.supports('importmap')) {
+    console.log('Your browser supports import maps.');
+  } else {
+    console.log("no import map support")
+  }
+</script>
 <script type="module">
   import {AnimExample} from '../dist/animExample.js'
   let example = new AnimExample()
