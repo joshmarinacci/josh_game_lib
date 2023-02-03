@@ -23,6 +23,20 @@
 <body>
 
 <canvas id="canvas" width="600" height="600" tabindex="0"></canvas>
+<script type="importmap">
+{
+  "imports": {
+    "josh_js_util": "../node_modules/josh_js_util/dist/index.js"
+  }
+}
+</script>
+<script type="module">
+  if (HTMLScriptElement.supports && HTMLScriptElement.supports('importmap')) {
+    console.log('Your browser supports import maps.');
+  } else {
+    console.log("no import map support")
+  }
+</script>
 <script src="../dist/index.js"></script>
 <script type="module">
   import {JumpExample} from '../dist/jumpExample.js'
