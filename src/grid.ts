@@ -70,7 +70,7 @@ export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): Co
         let cell = grid.get_at(cell_coords.x, cell_coords.y)
         if (cell) {
             if (cell.value == 0) return {collided: false}
-            if (cell.value == 1) {
+            if (cell.value >= 1) {
                 let cell_bounds = grid.get_cell_bounds(cell_coords.x, cell_coords.y)
                 let r = check_collision_block(old_ball, cell_bounds, v)
                 if(r.collided) {

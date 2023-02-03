@@ -97,7 +97,7 @@ const DEBUG = {
     GRID:false,
     METRICS: false,
     PARTICLES: true,
-    SOUND_EFFECTS:true,
+    SOUND_EFFECTS:false,
     MUSIC:false,
 }
 const SCREEN = new Size(200,200)
@@ -168,8 +168,26 @@ function init_heart():Level {
         grid: grid
     }
 }
-
+function init_double_hit():Level {
+    let grid = new Grid(10,4,14)
+    grid.forEach((cell,index) => {
+        cell.value = 1
+        cell.color = RED
+        cell.border = WHITE
+        if(index.y < 2) {
+            cell.value = 2
+            cell.color = GREEN
+            cell.border = WHITE
+        }
+    })
+    grid.position = new Point(30,30)
+    return {
+        velocity: new Point(60,-60),
+        grid: grid
+    }
+}
 const LEVELS = [
+    init_double_hit(),
     init_heart(),
     init_checkerboard(),
     init_gradient(),
@@ -271,7 +289,12 @@ export class PongExample implements TickClient {
             this.ball.velocity = this.ball.velocity.multiply(r.reflection)
             let cell = r.target as Cell
             // hide the cell
-            cell.value = 0
+            if(cell.value == 2) {
+                cell.value = 1
+                cell.color = RED
+            } else {
+                cell.value = 0
+            }
             // add a particle effect
             this.particles.push(new ParticleEffect({
                 count: 30,
@@ -418,7 +441,7 @@ export class PongExample implements TickClient {
           .X.
           XXX
         `
-        let data = ArrayGrid.fromPattern<PartCell>(one_pattern,to_PartCell)
+        let data1 = ArrayGrid.fromPattern<PartCell>(one_pattern,to_PartCell)
 
         let two_pattern = `
         xxx
@@ -437,7 +460,7 @@ export class PongExample implements TickClient {
         xxx
         `
         let data3 = ArrayGrid.fromPattern<PartCell>(three_pattern,to_PartCell)
-        let patterns = [data, data2, data3 ]
+        let patterns = [data1, data2, data3 ]
 
         this.particles.push(new ParticleEffect<PartCell>({
             delay: delay,
