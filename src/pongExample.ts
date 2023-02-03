@@ -186,7 +186,26 @@ function init_double_hit():Level {
         grid: grid
     }
 }
+function init_indistructible():Level {
+    let grid = new Grid(10,2,14)
+    grid.forEach((cell,index) => {
+        cell.value = 1
+        cell.color = RED
+        cell.border = WHITE
+        if(index.y < 1) {
+            cell.value = 3
+            cell.color = new RGB(0.1,0.1,0.1)
+            cell.border = WHITE
+        }
+    })
+    grid.position = new Point(30,30)
+    return {
+        velocity: new Point(60,-60),
+        grid: grid
+    }
+}
 const LEVELS = [
+    init_indistructible(),
     init_double_hit(),
     init_heart(),
     init_checkerboard(),
@@ -289,12 +308,17 @@ export class PongExample implements TickClient {
             this.ball.velocity = this.ball.velocity.multiply(r.reflection)
             let cell = r.target as Cell
             // hide the cell
+            if(cell.value == 1) {
+                cell.value = 0
+            }
             if(cell.value == 2) {
                 cell.value = 1
                 cell.color = RED
-            } else {
-                cell.value = 0
             }
+            if(cell.value == 3) {
+                cell.value = 3
+            }
+
             // add a particle effect
             this.particles.push(new ParticleEffect({
                 count: 30,
