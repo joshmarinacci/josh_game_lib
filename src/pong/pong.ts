@@ -12,25 +12,25 @@ level 3: 9 x 7 red heart, 70pps
 
  */
 import {ArrayGrid, Point, rand, Size} from "josh_js_util"
-import {Bounds, lerp_rgb} from "./math.js";
-import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
-import {check_collision_block} from "./physics.js";
-import {Cell, check_collision_grid,  Grid} from "./grid.js";
-import {KeyboardSystem} from "./keyboard.js";
-import {Fader, Particle, ParticleEffect, Wiggle} from "./effects.js";
+import {Bounds} from "../math.js";
+import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "../time.js";
+import {check_collision_block} from "../physics.js";
+import {BrickGrid, Cell, check_collision_grid} from "./brickGrid.js";
+import {KeyboardSystem} from "../keyboard.js";
+import {Fader, Particle, ParticleEffect, Wiggle} from "../effects.js";
 import {
-    BLACK,
-    BLUE,
     darken,
     GREEN,
     RED,
     RGB,
-    rgb_to_string, rgb_to_string_with_alpha,
+    rgb_to_string,
+    rgb_to_string_with_alpha,
     VIOLET,
     WHITE,
     YELLOW
-} from "./color.js";
-import {Twerp} from "./anim.js";
+} from "../color.js";
+import {Twerp} from "../anim.js";
+import {Level, LEVELS} from "./levels.js";
 
 // @ts-ignore
 const sfxr = window.sfxr
@@ -105,123 +105,18 @@ const SCALE = 3
 
 const BORDER_WIDTH = 10
 
-type Level = {
-    grid:Grid
-    velocity:Point
-}
-
 const twerp = new Twerp()
-
-function init_gradient():Level {
-    let grid = new Grid(10,5, 14)
-    grid.forEach((cell: Cell, index) => {
-        cell.value = 1
-        cell.color = lerp_rgb(RED,YELLOW,index.y/4)
-        cell.border = darken(cell.color)
-    })
-    grid.position = new Point(30,30)
-    return {
-        velocity: new Point(50,-50),
-        grid: grid
-    }
-}
-function init_checkerboard():Level {
-    let grid = new Grid(10,8, 14)
-    grid.forEach((cell: Cell, index) => {
-        if((index.x + index.y) % 2 === 0) {
-            cell.value = 1
-            cell.color = RED
-            cell.border = RED
-        } else {
-            cell.value = 0
-        }
-    })
-    grid.position = new Point(30,30)
-    return {
-        velocity: new Point(60,-60),
-        grid: grid
-    }
-}
-function init_heart():Level {
-    let grid = new Grid(9,8, 14)
-    grid.position = new Point(40,10)
-    let pattern = `
-    ..XX.XX..
-    .XXXXXXX.
-    XXXXXXXXX
-    XXXXXXXXX
-    XXXXXXXXX
-    .XXXXXXX.
-    ..XXXXX..
-    ...XXX...
-    `
-    let data = ArrayGrid.fromPattern<Cell>(pattern,(ch:string,index)=> {
-        return {
-            value: ch==='.'?0:1,
-            border:darken(RED),
-            color:RED
-        }
-    })
-    data.forEach((c,i)=>grid.set_at(i.x,i.y,c))
-    return {
-        velocity: new Point(70,-70),
-        grid: grid
-    }
-}
-function init_double_hit():Level {
-    let grid = new Grid(10,4,14)
-    grid.forEach((cell,index) => {
-        cell.value = 1
-        cell.color = RED
-        cell.border = WHITE
-        if(index.y < 2) {
-            cell.value = 2
-            cell.color = GREEN
-            cell.border = WHITE
-        }
-    })
-    grid.position = new Point(30,30)
-    return {
-        velocity: new Point(60,-60),
-        grid: grid
-    }
-}
-function init_indistructible():Level {
-    let grid = new Grid(10,2,14)
-    grid.forEach((cell,index) => {
-        cell.value = 1
-        cell.color = RED
-        cell.border = WHITE
-        if(index.y < 1) {
-            cell.value = 3
-            cell.color = new RGB(0.1,0.1,0.1)
-            cell.border = WHITE
-        }
-    })
-    grid.position = new Point(30,30)
-    return {
-        velocity: new Point(60,-60),
-        grid: grid
-    }
-}
-const LEVELS = [
-    init_indistructible(),
-    init_double_hit(),
-    init_heart(),
-    init_checkerboard(),
-    init_gradient(),
-]
 
 
 function play_effect(thunk: any) {
     if(DEBUG.SOUND_EFFECTS) thunk.play()
 }
 
-export class PongExample implements TickClient {
+export class Pong implements TickClient {
     private canvas: HTMLCanvasElement
     private ball: Ball
     private blocks: Bumper[]
-    private grid: Grid
+    private grid: BrickGrid
     private game_runner: GameRunner;
     private paddle: Paddle;
     private keyboard: KeyboardSystem;

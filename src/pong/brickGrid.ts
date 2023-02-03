@@ -1,6 +1,6 @@
-import {Bounds} from "./math.js";
-import {check_collision_block, CollisionResult} from "./physics.js";
-import {darken, RED, RGB, rgb_to_string} from "./color.js";
+import {Bounds} from "../math.js";
+import {check_collision_block, CollisionResult} from "../physics.js";
+import {darken, RED, RGB, rgb_to_string} from "../color.js";
 import {ArrayGrid, Point} from "josh_js_util";
 
 export type Cell = {
@@ -9,7 +9,7 @@ export type Cell = {
     border: RGB
 }
 
-export class Grid extends ArrayGrid<Cell> {
+export class BrickGrid extends ArrayGrid<Cell> {
     draw_size: number;
     position: Point;
     constructor(w:number, h:number, size:number) {
@@ -52,7 +52,7 @@ export class Grid extends ArrayGrid<Cell> {
         return new Bounds(this.position.x, this.position.y, this.w * 40, this.h * 40)
     }
 }
-export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): CollisionResult {
+export function check_collision_grid(grid: BrickGrid, old_ball: Bounds, v: Point): CollisionResult {
     let bounds = grid.self_bounds()
     let new_ball = old_ball.add(v)
     if (!bounds.intersects(new_ball) && !bounds.intersects(old_ball)) {
@@ -62,7 +62,7 @@ export function check_collision_grid(grid: Grid, old_ball: Bounds, v: Point): Co
     }
 
 //
-    function check_collision_grid_corner(grid: Grid, corner: Point) {
+    function check_collision_grid_corner(grid: BrickGrid, corner: Point) {
         let cell_coords = corner.subtract(grid.position).scale(1 / grid.draw_size).floor()
         let cell = grid.get_at(cell_coords.x, cell_coords.y)
         if (cell) {

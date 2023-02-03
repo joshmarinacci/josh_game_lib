@@ -41,10 +41,10 @@
 </script>
 
 <script type="module">
-    import {PongExample} from '../dist/pongExample.js'
-    let example = new PongExample()
+    import {Pong} from '../dist/pong/pong.js'
+    let example = new Pong()
     example.attach(document.querySelector('#canvas'))
-    example.start(this)
+    example.start()
 </script>
 </body>
 </html>
