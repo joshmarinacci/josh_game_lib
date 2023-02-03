@@ -1,7 +1,7 @@
-import {BLACK, BLUE, GREEN, LinearGradientFill, RED, WHITE} from "./color.js";
-import {RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
-import {Twerp} from "./anim.js";
-import {Shape} from "./shapes.js";
+import {BLACK, BLUE, GREEN, LinearGradientFill, RED, WHITE} from "../color.js";
+import {RequestAnimGameRunner, TickClient, TimeInfo} from "../time.js";
+import {Twerp} from "../anim.js";
+import {Shape} from "../shapes.js";
 import {Point, range, Size} from "josh_js_util";
 
 function gradientToCanvas(fill:LinearGradientFill, ctx:CanvasRenderingContext2D) {

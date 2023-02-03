@@ -1,7 +1,7 @@
-import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "./time.js";
-import {KeyboardSystem} from "./keyboard.js";
-import {Bounds} from "./math.js";
-import {check_collision_block} from "./physics.js";
+import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "../time.js";
+import {KeyboardSystem} from "../keyboard.js";
+import {Bounds} from "../math.js";
+import {check_collision_block} from "../physics.js";
 import {Point, Size} from "josh_js_util";
 
 
@@ -108,7 +108,7 @@ class Enemy {
     }
 }
 
-export class JumpExample implements TickClient {
+export class Jump implements TickClient {
     private canvas: HTMLCanvasElement
     private game_runner: GameRunner;
     private keyboard: KeyboardSystem;
