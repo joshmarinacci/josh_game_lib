@@ -1,7 +1,6 @@
-import {Bounds} from "../math.js";
 import {check_collision_block, CollisionResult} from "../physics.js";
 import {Color, RED, RGB} from "../color.js";
-import {ArrayGrid, Point} from "josh_js_util";
+import {ArrayGrid, Bounds, Point} from "josh_js_util";
 
 export type Cell = {
     value: number
@@ -45,7 +44,7 @@ export class BrickGrid extends ArrayGrid<Cell> {
         ctx.restore()
     }
     get_cell_bounds(x: number, y: number): Bounds {
-        return new Bounds(x * this.draw_size, y * this.draw_size, this.size, this.size).add(this.position)
+        return new Bounds(x * this.draw_size, y * this.draw_size, this.draw_size, this.draw_size).add(this.position)
     }
 
     public self_bounds() {

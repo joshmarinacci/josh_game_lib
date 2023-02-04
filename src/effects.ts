@@ -1,8 +1,8 @@
-import {Bounds, lerp_rgb} from "./math.js";
 import {Seconds, TimeInfo, TValue} from "./time.js";
 import {RED, RGB, rgb_to_string_with_alpha} from "./color.js";
-import {Point} from "josh_js_util";
+import {Bounds, Point} from "josh_js_util";
 import {System} from "./system.js";
+import {lerp_rgb} from "./math.js";
 
 export interface Particle {
     position: Point

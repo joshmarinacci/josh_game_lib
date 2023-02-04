@@ -11,8 +11,7 @@ level 3: 9 x 7 red heart, 70pps
 111116JF2KzyFRG2qu7K9JejxwSqeeqc6p3PdyvDLdNR3X67xiPLegK1pEcrv38Z6pGRHnkujHfbKAznPcJ7WN7XmfBhh7X12sCyPrGyuye75YHMGhxZ6Ghm
 
  */
-import {ArrayGrid, Point, rand, Size} from "josh_js_util"
-import {Bounds} from "../math.js";
+import {ArrayGrid, Bounds, Point, rand, Size} from "josh_js_util"
 import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "../time.js";
 import {check_collision_block} from "../physics.js";
 import {BrickGrid, Cell, check_collision_grid} from "./brickGrid.js";
@@ -455,15 +454,14 @@ export class Pong implements TickClient {
             let delta = this.paddle.velocity.scale(1*time.delta)
             this.paddle.bounds.add_self(delta)
             if(this.paddle.bounds.right() > SCREEN.w - BORDER_WIDTH) {
-                this.paddle.bounds.set_right(SCREEN.w - BORDER_WIDTH)
+                this.paddle.bounds = new Bounds(SCREEN.w - BORDER_WIDTH-this.paddle.bounds.w, this.paddle.bounds.y, this.paddle.bounds.w, this.paddle.bounds.h)
             }
         }
         if(this.keyboard.isPressed('ArrowLeft')) {
             let delta = this.paddle.velocity.scale(-1*time.delta)
             this.paddle.bounds.add_self(delta)
-            // this.paddle.bounds.add_self(new Point(-3,0))
             if(this.paddle.bounds.left() < BORDER_WIDTH) {
-                this.paddle.bounds.set_left(BORDER_WIDTH)
+                this.paddle.bounds = new Bounds(BORDER_WIDTH, this.paddle.bounds.y, this.paddle.bounds.w, this.paddle.bounds.h)
             }
         }
     }

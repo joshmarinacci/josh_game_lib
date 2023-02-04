@@ -1,5 +1,4 @@
-import {Bounds} from "./math.js";
-import {Point} from "josh_js_util";
+import {Bounds, Point} from "josh_js_util";
 
 export type CollisionResult = {
     collided: boolean

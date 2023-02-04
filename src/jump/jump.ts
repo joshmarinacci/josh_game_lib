@@ -1,8 +1,7 @@
 import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "../time.js";
 import {KeyboardSystem} from "../keyboard.js";
-import {Bounds} from "../math.js";
 import {check_collision_block} from "../physics.js";
-import {Point, Size} from "josh_js_util";
+import {Bounds, Point, Size} from "josh_js_util";
 
 
 /*
