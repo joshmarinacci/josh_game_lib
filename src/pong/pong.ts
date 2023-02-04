@@ -97,8 +97,22 @@ const DEBUG = {
     GRID:false,
     METRICS: false,
     PARTICLES: true,
-    SOUND_EFFECTS:false,
+    sound:true,
     MUSIC:false,
+}
+
+function parse_query(str:string) {
+    str = str.trim()
+    if(str.indexOf('?')>=0) str = str.substring(str.indexOf('?')+1)
+    let opts = {}
+    str.split('&')
+        .map(s => s.split("="))
+        .map(parts => opts[parts[0]] = parts[1])
+    return opts
+}
+let opts = parse_query(document.location.search)
+if(opts['sound']) {
+    if(opts['sound'] === 'false') DEBUG.sound = false
 }
 const SCREEN = new Size(200,200)
 const SCALE = 3
@@ -109,7 +123,7 @@ const twerp = new Twerp()
 
 
 function play_effect(thunk: any) {
-    if(DEBUG.SOUND_EFFECTS) thunk.play()
+    if(DEBUG.sound) thunk.play()
 }
 
 export class Pong implements TickClient {

@@ -14,9 +14,9 @@ const Y_REFLECTION_VECTOR = new Point(1,-1)
 
 export function check_collision_block(old_bounds: Bounds, block: Bounds, v: Point): CollisionResult {
     if (old_bounds.intersects(block)) {
-        console.log("intersects with old bounds")
-        console.log("already inside!", old_bounds, block)
-        console.log("old left",old_bounds.left(), 'block right',block.right())
+        // console.log("intersects with old bounds")
+        // console.log("already inside!", old_bounds, block)
+        // console.log("old left",old_bounds.left(), 'block right',block.right())
         return {
             collided: false
         }
