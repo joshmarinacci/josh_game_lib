@@ -11,7 +11,7 @@ level 3: 9 x 7 red heart, 70pps
 111116JF2KzyFRG2qu7K9JejxwSqeeqc6p3PdyvDLdNR3X67xiPLegK1pEcrv38Z6pGRHnkujHfbKAznPcJ7WN7XmfBhh7X12sCyPrGyuye75YHMGhxZ6Ghm
 
  */
-import {ArrayGrid, Bounds, Point, rand, Size} from "josh_js_util"
+import {ArrayGrid, Bounds, Point, rand, Size, toRadians} from "josh_js_util"
 import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "../time.js";
 import {check_collision_block} from "../physics.js";
 import {BrickGrid, Cell, check_collision_grid} from "./brickGrid.js";
@@ -54,12 +54,25 @@ class Ball {
     }
 }
 
+function toDegrees(rad):number {
+    return rad/Math.PI*180
+}
+function angle_to_point(ang2, mag):Point {
+    let xx = Math.sin(ang2) * mag
+    let yy = Math.cos(ang2) * mag
+    let pt2 = new Point(xx, yy)
+    return pt2
+}
+
+
 class Paddle {
     bounds:Bounds
-    velocity: Point;
+    velocity: Point
+    speed: Point
     constructor() {
         this.bounds = new Bounds(50,160,50,10)
-        this.velocity = new Point(150,0) // in pixels per second
+        this.velocity = new Point(0,0)
+        this.speed = new Point(150,0) // in pixels per second
     }
 
     draw(ctx: CanvasRenderingContext2D) {
@@ -186,15 +199,44 @@ export class Pong implements TickClient {
     }
 
     private update_physics(time: TimeInfo) {
-        // console.log('delta',time.delta)
         let velocity = this.ball.velocity.scale(time.delta)
         let new_bounds = this.ball.bounds.add(velocity)
         //hit paddle
         let r3 = check_collision_block(this.ball.bounds,this.paddle.bounds,velocity)
         if(r3.collided) {
-            new_bounds = this.ball.bounds.add(velocity.scale(r3.tvalue))
-            //reflect velocity vector
+            let tv:number = r3.tvalue
+            velocity = new Point(1,1)
+            let pre_move = velocity.scale(0)
+            let post_move = velocity.scale(1).multiply(r3.reflection)
+            new_bounds = this.ball.bounds.add(pre_move).add(post_move)
+            //reflect velocity
             this.ball.velocity = this.ball.velocity.multiply(r3.reflection)
+            if(this.paddle.velocity.x < 0) {
+                let ang = point_to_angle(this.ball.velocity);
+                let mag = this.ball.velocity.magnitude()
+                console.log("ang",toDegrees(ang))
+                let ang2 = ang + toRadians(20)
+                if(this.ball.velocity.x < 0) {
+                    if (toDegrees(ang2) > -100) {
+                        console.log("clipped")
+                        ang2 = toRadians(-100)
+                    }
+                }
+                this.ball.velocity = angle_to_point(ang2, mag)
+            }
+            if(this.paddle.velocity.x > 0) {
+                let ang = point_to_angle(this.ball.velocity);
+                console.log("ang",toDegrees(ang))
+                let mag = this.ball.velocity.magnitude()
+                let ang2 = ang - toRadians(20)
+                if(this.ball.velocity.x > 0) {
+                    if(toDegrees(ang2) < 95) {
+                        console.log("clipped")
+                        ang2 = toRadians(95)
+                    }
+                }
+                this.ball.velocity = angle_to_point(ang2,mag)
+            }
             this.ball.fader.start()
             play_effect(thunk)
         }
@@ -253,8 +295,8 @@ export class Pong implements TickClient {
             play_effect(punch)
         }
         this.ball.bounds = new_bounds
+        this.paddle.velocity = new Point(0,0)
     }
-
     private draw(time: TimeInfo) {
         let ctx = this.canvas.getContext('2d')
         ctx.save()
@@ -313,8 +355,6 @@ export class Pong implements TickClient {
             ctx.restore()
         }
         ctx.restore()
-
-
     }
     private check_win(time: TimeInfo) {
         let count = 0
@@ -325,10 +365,8 @@ export class Pong implements TickClient {
             this.go_next_level()
         }
     }
-
     private go_next_level() {
         this.levelIndex = this.levelIndex+1
-        console.log("new level",this.levelIndex)
         if(this.levelIndex >= this.levels.length) {
             this.win_game()
         } else {
@@ -346,7 +384,6 @@ export class Pong implements TickClient {
             console.log("died")
             this.reset_ball()
         }
-
     }
     private win_game() {
         console.log("you won the game")
@@ -451,19 +488,25 @@ export class Pong implements TickClient {
     }
     private check_input(time: TimeInfo) {
         if(this.keyboard.isPressed('ArrowRight')) {
-            let delta = this.paddle.velocity.scale(1*time.delta)
+            let delta = this.paddle.speed.scale(1*time.delta)
+            this.paddle.velocity = new Point(1,0)
             this.paddle.bounds.add_self(delta)
             if(this.paddle.bounds.right() > SCREEN.w - BORDER_WIDTH) {
                 this.paddle.bounds = new Bounds(SCREEN.w - BORDER_WIDTH-this.paddle.bounds.w, this.paddle.bounds.y, this.paddle.bounds.w, this.paddle.bounds.h)
             }
         }
         if(this.keyboard.isPressed('ArrowLeft')) {
-            let delta = this.paddle.velocity.scale(-1*time.delta)
+            let delta = this.paddle.speed.scale(-1*time.delta)
+            this.paddle.velocity = new Point(-1,0)
             this.paddle.bounds.add_self(delta)
             if(this.paddle.bounds.left() < BORDER_WIDTH) {
                 this.paddle.bounds = new Bounds(BORDER_WIDTH, this.paddle.bounds.y, this.paddle.bounds.w, this.paddle.bounds.h)
             }
         }
     }
+}
+
+function point_to_angle(velocity: Point): number {
+    return Math.atan2(velocity.x,velocity.y)
 }
 
