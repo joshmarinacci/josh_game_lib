@@ -17,7 +17,7 @@ import {GameRunner, RequestAnimGameRunner, TickClient, TimeInfo} from "../time.j
 import {check_collision_block} from "../physics.js";
 import {BrickGrid, Cell, check_collision_grid} from "./brickGrid.js";
 import {KeyboardSystem} from "../keyboard.js";
-import {Fader, Particle, ParticleEffect, Wiggle} from "../effects.js";
+import {Fader, Particle, ParticleEffect, ParticleSystem, Wiggle} from "../effects.js";
 import {
     GREEN,
     RED,
@@ -136,12 +136,13 @@ export class Pong implements TickClient {
     private game_runner: GameRunner;
     private paddle: Paddle;
     private keyboard: KeyboardSystem;
-    private particles: ParticleEffect<any>[];
+    private particles: ParticleSystem;
     private levels: Level[];
     private levelIndex: number;
     private level: Level;
     private playing: boolean;
     constructor() {
+        this.particles = new ParticleSystem()
         this.ball = new Ball()
         this.paddle = new Paddle()
         const top_bumper = new Bumper(0,0,SCREEN.w,BORDER_WIDTH)
@@ -157,7 +158,6 @@ export class Pong implements TickClient {
         this.levelIndex = DEBUG.LEVEL
         this.level = this.levels[this.levelIndex]
         this.grid = this.level.grid
-        this.particles = []
         this.playing = false
     }
 
@@ -175,7 +175,7 @@ export class Pong implements TickClient {
             this.check_die(time)
             this.check_win(time)
         }
-        this.update_particles(time)
+        if(DEBUG.PARTICLES) this.particles.tick(time)
         this.draw(time)
     }
     start() {
@@ -231,11 +231,25 @@ export class Pong implements TickClient {
             }
 
             // add a particle effect
-            this.particles.push(new ParticleEffect({
+            this.particles.particles.push(new ParticleEffect<Particle>({
                 count: 30,
                 position:this.ball.bounds.center(),
                 color: new RGB(252/255, 147/255, 230/255),
-                maxLifetime: 1
+                maxLifetime: 1,
+                init:(effect) => {
+                    for(let i=0; i<effect.start_count; i++) {
+                        let part:Particle = {
+                            position: new Point(0,0),
+                            velocity: new Point(rand(-30,30),rand(-30,30)),
+                            size: rand(2,5),
+                            color: RGB.grayscale(1.0),
+                            alpha: 1.0,
+                            age: 4,
+                        }
+                        effect.particles.push(part)
+                    }
+
+                }
             }))
             play_effect(punch)
         }
@@ -287,7 +301,7 @@ export class Pong implements TickClient {
         // paddle
         this.paddle.draw(ctx)
 
-        if(DEBUG.PARTICLES) this.particles.forEach(part => part.draw(time,ctx))
+        if(DEBUG.PARTICLES) this.particles.particles.forEach(part => part.draw(time,ctx))
 
         if(DEBUG.METRICS) {
             // debug
@@ -397,7 +411,7 @@ export class Pong implements TickClient {
         let data3 = ArrayGrid.fromPattern<PartCell>(three_pattern,to_PartCell)
         let patterns = [data1, data2, data3 ]
 
-        this.particles.push(new ParticleEffect<PartCell>({
+        this.particles.particles.push(new ParticleEffect<PartCell>({
             delay: delay,
             count: 3*5,
             color: GREEN,
@@ -452,10 +466,6 @@ export class Pong implements TickClient {
                 this.paddle.bounds.set_left(BORDER_WIDTH)
             }
         }
-    }
-    private update_particles(time: TimeInfo) {
-        if(DEBUG.PARTICLES) this.particles.forEach(part => part.update(time))
-        if(DEBUG.PARTICLES) this.particles = this.particles.filter(part => part.isAlive())
     }
 }
 

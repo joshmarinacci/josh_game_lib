@@ -1,7 +1,8 @@
 import {Bounds, lerp_rgb} from "./math.js";
 import {Seconds, TimeInfo, TValue} from "./time.js";
-import {RGB, rgb_to_string_with_alpha} from "./color.js";
+import {RED, RGB, rgb_to_string_with_alpha} from "./color.js";
 import {Point} from "josh_js_util";
+import {System} from "./system.js";
 
 export interface Particle {
     position: Point
@@ -25,7 +26,7 @@ export type ParticleEffectParams<P extends Particle> = {
 export class ParticleEffect<P extends Particle> {
     particles: P[];
     private position: Point;
-    private start_count: number;
+    start_count: number;
     age: number;
     private maxLifetime: number;
     private delay: number;
@@ -39,7 +40,9 @@ export class ParticleEffect<P extends Particle> {
         this.maxLifetime = opts.maxLifetime
         this.age = 0
         this.delay = opts.delay?opts.delay:0
-        if(opts.init)  opts.init(this)
+        if(opts.init)  {
+            opts.init(this)
+        }
         this.draw_cb = opts.draw
         this.update_cb = opts.update
     }
@@ -70,6 +73,16 @@ export class ParticleEffect<P extends Particle> {
 
     isAlive() {
         return (this.age < this.maxLifetime)
+    }
+}
+export class ParticleSystem implements System {
+    particles: ParticleEffect<any>[];
+    constructor() {
+        this.particles = []
+    }
+    tick(time: TimeInfo) {
+        this.particles.forEach(part => part.update(time))
+        this.particles = this.particles.filter(part => part.isAlive())
     }
 }
 
