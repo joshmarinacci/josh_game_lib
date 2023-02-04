@@ -99,6 +99,7 @@ const DEBUG = {
     PARTICLES: true,
     sound:true,
     MUSIC:false,
+    LEVEL:0,
 }
 
 function parse_query(str:string) {
@@ -113,6 +114,9 @@ function parse_query(str:string) {
 let opts = parse_query(document.location.search)
 if(opts['sound']) {
     if(opts['sound'] === 'false') DEBUG.sound = false
+}
+if(opts['level']) {
+    DEBUG.LEVEL = parseInt(opts['level'])
 }
 const SCREEN = new Size(200,200)
 const SCALE = 3
@@ -152,7 +156,7 @@ export class Pong implements TickClient {
 
         this.blocks = [top_bumper,right_bumper,left_bumper]
         this.levels = LEVELS
-        this.levelIndex = 0
+        this.levelIndex = DEBUG.LEVEL
         this.level = this.levels[this.levelIndex]
         this.grid = this.level.grid
         this.particles = []
