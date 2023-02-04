@@ -1,7 +1,11 @@
 import {Point, lerp_number} from "josh_js_util";
 
 
-export class RGB {
+export interface Color {
+    toCSSString():string
+    darken():Color
+}
+export class RGB implements Color {
     r: number
     g: number
     b: number
@@ -17,20 +21,45 @@ export class RGB {
             lerp_number(t,this.b,that.b),
         )
     }
-
     toCSSString():string {
         let r = Math.floor(this.r * 255)
         let g = Math.floor(this.g * 255)
         let b = Math.floor(this.b * 255)
         return `rgb(${r} ${g} ${b})`
     }
-
     static grayscale(g:number) {
         return new RGB(g,g,g)
     }
     darken():RGB {
         let sc = 0.8
         return new RGB(this.r*sc,this.g*sc,this.b*sc)
+    }
+}
+
+export class HSL implements Color {
+    h:number
+    s:number
+    l:number
+    constructor(h,s,l) {
+        this.h = h
+        this.s = s
+        this.l = l
+    }
+    darken():HSL {
+        return new HSL(this.h,this.s,this.l*0.8)
+    }
+    toCSSString():string {
+        let h = Math.floor(this.h * 360)
+        let s = Math.floor(this.s * 100)
+        let l = Math.floor(this.l * 100)
+        return `hsl(${h} ${s}% ${l}%)`
+    }
+    lerp(t: number, that: HSL) {
+        return new HSL(
+            lerp_number(t,this.h,that.h),
+            lerp_number(t,this.s,that.s),
+            lerp_number(t,this.l,that.l),
+        )
     }
 }
 

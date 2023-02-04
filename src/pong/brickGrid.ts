@@ -1,12 +1,12 @@
 import {Bounds} from "../math.js";
 import {check_collision_block, CollisionResult} from "../physics.js";
-import {RED, RGB} from "../color.js";
+import {Color, RED, RGB} from "../color.js";
 import {ArrayGrid, Point} from "josh_js_util";
 
 export type Cell = {
     value: number
-    color: RGB
-    border: RGB
+    color: Color
+    border: Color
 }
 
 export class BrickGrid extends ArrayGrid<Cell> {

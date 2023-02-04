@@ -1,4 +1,4 @@
-import {RGB} from "./color.js";
+import {HSL, RGB} from "./color.js";
 import {Point, Insets} from "josh_js_util"
 
 export class Bounds {
@@ -99,6 +99,9 @@ export class Bounds {
 }
 
 export function lerp_rgb(s: RGB, e: RGB, t: number): RGB {
+    return s.lerp(t,e)
+}
+export function lerp_hsl(s: HSL, e: HSL, t: number): HSL {
     return s.lerp(t,e)
 }
 
