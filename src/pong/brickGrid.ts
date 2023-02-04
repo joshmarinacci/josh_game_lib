@@ -1,6 +1,6 @@
 import {Bounds} from "../math.js";
 import {check_collision_block, CollisionResult} from "../physics.js";
-import {RED, RGB, rgb_to_string} from "../color.js";
+import {RED, RGB} from "../color.js";
 import {ArrayGrid, Point} from "josh_js_util";
 
 export type Cell = {
@@ -35,9 +35,9 @@ export class BrickGrid extends ArrayGrid<Cell> {
                 let y = j * this.draw_size
                 let ww = this.draw_size - 2
                 let hh = this.draw_size - 2
-                ctx.fillStyle = rgb_to_string(cell.color)
+                ctx.fillStyle = cell.color.toCSSString()
                 ctx.fillRect(x,y,ww,hh)
-                ctx.strokeStyle = rgb_to_string(cell.border)
+                ctx.strokeStyle = cell.border.toCSSString()
                 ctx.lineWidth = 1
                 ctx.strokeRect(x, y, ww, hh)
             }

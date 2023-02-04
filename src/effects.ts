@@ -1,6 +1,6 @@
 import {Bounds, lerp_rgb} from "./math.js";
 import {Seconds, TimeInfo, TValue} from "./time.js";
-import {RGB, rgb_to_string, rgb_to_string_with_alpha} from "./color.js";
+import {RGB, rgb_to_string_with_alpha} from "./color.js";
 import {Point} from "josh_js_util";
 
 export interface Particle {
@@ -141,9 +141,9 @@ export class Fader extends TimedEffect {
         let t = this.update(time)
         if (this.running) {
             let rgb = lerp_rgb(this.startVal, this.endVal, t)
-            return rgb_to_string(rgb)
+            return rgb.toCSSString()
         } else {
-            return rgb_to_string(this.endVal)
+            return this.endVal.toCSSString()
         }
     }
 }

@@ -34,10 +34,6 @@ export class RGB {
     }
 }
 
-export function rgb_to_string(rgb: RGB) {
-    return rgb.toCSSString()
-}
-
 export function rgb_to_string_with_alpha(rgb: RGB, alpha: number) {
     let r = (rgb.r * 100).toFixed(0)
     let g = (rgb.g * 100).toFixed(0)

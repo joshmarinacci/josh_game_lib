@@ -22,7 +22,6 @@ import {
     GREEN,
     RED,
     RGB,
-    rgb_to_string,
     rgb_to_string_with_alpha,
     VIOLET,
     WHITE,
@@ -279,7 +278,7 @@ export class Pong implements TickClient {
         ctx.fillStyle = this.ball.fader.makeColor(time)
         ctx.fillRect(this.ball.bounds.x,this.ball.bounds.y,this.ball.bounds.w,this.ball.bounds.h)
         // this.fill_bounds(ctx,this.ball.bounds,'#c50202')
-        ctx.strokeStyle = rgb_to_string(YELLOW)
+        ctx.strokeStyle = YELLOW.toCSSString()
         ctx.strokeRect(this.ball.bounds.x,this.ball.bounds.y,this.ball.bounds.w,this.ball.bounds.h)
 
         // grid
