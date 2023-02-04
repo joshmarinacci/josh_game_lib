@@ -19,7 +19,6 @@ import {BrickGrid, Cell, check_collision_grid} from "./brickGrid.js";
 import {KeyboardSystem} from "../keyboard.js";
 import {Fader, Particle, ParticleEffect, Wiggle} from "../effects.js";
 import {
-    darken,
     GREEN,
     RED,
     RGB,
@@ -427,7 +426,7 @@ export class Pong implements TickClient {
                     let pt = part.position.add(part.offset)
                     ctx.fillStyle = rgb_to_string_with_alpha(part.color, part.alpha)
                     ctx.fillRect(pt.x, pt.y, part.size, part.size)
-                    ctx.strokeStyle = rgb_to_string_with_alpha(darken(part.color), part.alpha)
+                    ctx.strokeStyle = rgb_to_string_with_alpha(part.color.darken(), part.alpha)
                     ctx.lineWidth = 1.0
                     ctx.strokeRect(pt.x,pt.y,part.size,part.size)
                     ctx.restore()

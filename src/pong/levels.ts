@@ -1,5 +1,5 @@
 import {BrickGrid, Cell} from "./brickGrid.js";
-import {darken, GREEN, RED, RGB, WHITE, YELLOW} from "../color.js";
+import {GREEN, RED, RGB, WHITE, YELLOW} from "../color.js";
 import {ArrayGrid, Point} from "josh_js_util";
 import {lerp_rgb} from "../math.js";
 
@@ -13,7 +13,7 @@ function init_gradient(): Level {
     grid.forEach((cell: Cell, index) => {
         cell.value = 1
         cell.color = lerp_rgb(RED, YELLOW, index.y / 4)
-        cell.border = darken(cell.color)
+        cell.border = cell.color.darken()
     })
     grid.position = new Point(30, 30)
     return {
@@ -56,7 +56,7 @@ function init_heart(): Level {
     let data = ArrayGrid.fromPattern<Cell>(pattern, (ch: string, index) => {
         return {
             value: ch === '.' ? 0 : 1,
-            border: darken(RED),
+            border: RED.darken(),
             color: RED
         }
     })

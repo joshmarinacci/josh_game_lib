@@ -24,14 +24,14 @@ export class RGB {
         let b = Math.floor(this.b * 255)
         return `rgb(${r} ${g} ${b})`
     }
-}
 
-export function darken(rgb:RGB):RGB {
-    return new RGB(
-        rgb.r*0.8,
-        rgb.g*0.8,
-        rgb.b*0.8
-    )
+    static grayscale(g:number) {
+        return new RGB(g,g,g)
+    }
+    darken():RGB {
+        let sc = 0.8
+        return new RGB(this.r*sc,this.g*sc,this.b*sc)
+    }
 }
 
 export function rgb_to_string(rgb: RGB) {

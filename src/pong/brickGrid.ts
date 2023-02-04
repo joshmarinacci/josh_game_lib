@@ -1,6 +1,6 @@
 import {Bounds} from "../math.js";
 import {check_collision_block, CollisionResult} from "../physics.js";
-import {darken, RED, RGB, rgb_to_string} from "../color.js";
+import {RED, RGB, rgb_to_string} from "../color.js";
 import {ArrayGrid, Point} from "josh_js_util";
 
 export type Cell = {
@@ -20,7 +20,7 @@ export class BrickGrid extends ArrayGrid<Cell> {
             return {
                 value: 0,
                 color: RED,
-                border: darken(RED)
+                border: RED.darken(),
             }
         });
     }
