@@ -516,6 +516,7 @@ export class Pong implements TickClient {
     }
 
     private async start_music():Promise<void> {
+        if(!DEBUG.MUSIC) return
         let res = await fetch("../song.json")
         let json_song = await res.json()
         //@ts-ignore
