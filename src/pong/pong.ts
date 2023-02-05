@@ -41,6 +41,7 @@ punch.setVolume(0.3)
 const sound_track = "https://www.beepbox.co/#9n31s0k0l00e03t2ma7g0fj07r1i0o432T1v1uc0f10l7q011d23A4F3B5Q0506Pd474E361963279T0v1u58f0q0x10ob1d03w5h1E1b7T1v1u3df0qwx10p511d08AcFbBfQ269cP969bE2bi7iT4v1uf0f0q011z6666ji8k8k3jSBKSJJAArriiiiii07JCABrzrrrrrrr00YrkqHrsrrrrjr005zrAqzrjzrrqr1jRjrqGGrrzsrsA099ijrABJJJIAzrrtirqrqjqixzsrAjrqjiqaqqysttAJqjikikrizrHtBJJAzArzrIsRCITKSS099ijrAJS____Qg99habbCAYrDzh00E0b4h400000000h4g000000014h000000004h400000000p1WBWqfibSqfVgzjhWhvgnVBpp60BWqfijtfMs600aqcMnQ5Z17ghQ4t5B960"
 
 
+
 const DEFAULT_BALL_BOUNDS = new Bounds(50,150,5,5)
 const DEFAULT_BALL_VELOCITY = new Point(50,-50) // speed in pixels per second
 class Ball {
@@ -153,6 +154,7 @@ export class Pong implements TickClient {
     private levelIndex: number;
     private level: Level;
     private playing: boolean;
+    private showing_splash: boolean
     constructor() {
         this.particles = new ParticleSystem()
         this.ball = new Ball()
@@ -171,6 +173,7 @@ export class Pong implements TickClient {
         this.level = this.levels[this.levelIndex]
         this.grid = this.level.grid
         this.playing = false
+        this.showing_splash = false
     }
 
     attach(element: Element) {
@@ -195,7 +198,7 @@ export class Pong implements TickClient {
         // this.game_runner = new SetIntervalTicker(100)
         this.game_runner.start(this)
         this.playing = false
-        this.start_level_info_display()
+        this.show_splash_screen()
     }
 
     private update_physics(time: TimeInfo) {
@@ -341,6 +344,13 @@ export class Pong implements TickClient {
 
         // paddle
         this.paddle.draw(ctx)
+
+        if(this.showing_splash) {
+            ctx.fillStyle = 'rgba(255,255,255,0.5)'
+            ctx.fillRect(0,0,SCREEN.w,SCREEN.h)
+            ctx.fillStyle = 'black'
+            ctx.fillText('Click to Play',70,100)
+        }
 
         if(DEBUG.PARTICLES) this.particles.particles.forEach(part => part.draw(time,ctx))
 
@@ -503,6 +513,28 @@ export class Pong implements TickClient {
                 this.paddle.bounds = new Bounds(BORDER_WIDTH, this.paddle.bounds.y, this.paddle.bounds.w, this.paddle.bounds.h)
             }
         }
+    }
+
+    private async start_music():Promise<void> {
+        let res = await fetch("../song.json")
+        let json_song = await res.json()
+        //@ts-ignore
+        let songsong = new beepbox.Song()
+        songsong.fromJsonObject(json_song)
+        //@ts-ignore
+        var synth = new beepbox.Synth(songsong);
+        //@ts-ignore
+        synth.play()
+    }
+    private show_splash_screen() {
+        this.showing_splash = true
+        const handler = () => {
+            this.showing_splash = false
+            this.start_music()
+            this.start_level_info_display()
+            this.canvas.removeEventListener('click',handler)
+        }
+        this.canvas.addEventListener('click',handler)
     }
 }
 
